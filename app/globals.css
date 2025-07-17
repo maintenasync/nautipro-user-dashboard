@@ -12,8 +12,26 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Light mode (default) */
+[data-theme="light"] {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+/* Dark mode */
+[data-theme="dark"] {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
+/* Auto mode - ikuti sistem */
+[data-theme="auto"] {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  [data-theme="auto"] {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
@@ -23,4 +41,154 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* === FORM ELEMENTS FIXES === */
+
+/* Light mode form elements - ALWAYS READABLE */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+select,
+textarea {
+  color: #111827 !important; /* Always dark text in light mode */
+  background-color: white !important;
+  border-color: #d1d5db !important;
+}
+
+/* Dark mode form elements */
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="email"],
+[data-theme="dark"] input[type="password"],
+[data-theme="dark"] input[type="number"],
+[data-theme="dark"] input[type="tel"],
+[data-theme="dark"] input[type="url"],
+[data-theme="dark"] input[type="search"],
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  color: #f9fafb !important; /* Light text in dark mode */
+  background-color: #374151 !important; /* Dark background */
+  border-color: #4b5563 !important;
+}
+
+/* Placeholder styles */
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: #6b7280 !important;
+}
+
+/* Select options */
+select option {
+  color: #111827 !important;
+  background-color: white !important;
+}
+
+[data-theme="dark"] select option {
+  color: #f9fafb !important;
+  background-color: #374151 !important;
+}
+
+/* Disabled states */
+input:disabled,
+select:disabled,
+textarea:disabled {
+  color: #6b7280 !important;
+  background-color: #f9fafb !important;
+}
+
+[data-theme="dark"] input:disabled,
+[data-theme="dark"] select:disabled,
+[data-theme="dark"] textarea:disabled {
+  color: #9ca3af !important;
+  background-color: #1f2937 !important;
+}
+
+/* Focus states */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px #3b82f6 !important;
+  border-color: #3b82f6 !important;
+}
+
+/* === DARK MODE COMPONENT OVERRIDES === */
+
+/* Background colors untuk komponen */
+[data-theme="dark"] .bg-white {
+  background-color: #1f2937 !important;
+}
+
+[data-theme="dark"] .bg-gray-50 {
+  background-color: #111827 !important;
+}
+
+[data-theme="dark"] .bg-gray-100 {
+  background-color: #374151 !important;
+}
+
+/* Text colors */
+[data-theme="dark"] .text-gray-900 {
+  color: #f9fafb !important;
+}
+
+[data-theme="dark"] .text-gray-800 {
+  color: #e5e7eb !important;
+}
+
+[data-theme="dark"] .text-gray-700 {
+  color: #d1d5db !important;
+}
+
+[data-theme="dark"] .text-gray-600 {
+  color: #9ca3af !important;
+}
+
+[data-theme="dark"] .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+/* Border colors */
+[data-theme="dark"] .border-gray-200 {
+  border-color: #374151 !important;
+}
+
+[data-theme="dark"] .border-gray-300 {
+  border-color: #4b5563 !important;
+}
+
+/* Shadow colors untuk dark mode */
+[data-theme="dark"] .shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="dark"] .shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Hover states */
+[data-theme="dark"] .hover\:bg-gray-50:hover {
+  background-color: #374151 !important;
+}
+
+[data-theme="dark"] .hover\:bg-gray-100:hover {
+  background-color: #4b5563 !important;
+}
+
+/* Smooth transitions untuk semua elements */
+* {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }

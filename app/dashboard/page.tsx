@@ -11,11 +11,11 @@ import TopBar from './components/layout/TopBar';
 
 // Import page components
 import DashboardHome from './components/pages/DashboardHome';
+import CrewManagement from './components/pages/CrewManagement';
 import Companies from './components/pages/Companies';
 import Vessels from './components/pages/Vessels';
 import License from './components/pages/License';
 import NotificationSetting from './components/pages/NotificationSetting';
-import Users from './components/pages/Users';
 import Settings from './components/pages/Settings';
 import CreateCompany from './components/pages/CreateCompany';
 import CreateVessel from './components/pages/CreateVessel';
@@ -24,7 +24,7 @@ import VesselDetail from './components/pages/VesselDetail';
 // Import icons
 import {
     HomeIcon,
-    UsersIcon,
+    CrewIcon,
     BuildingIcon,
     ShipIcon,
     LicenseIcon,
@@ -35,7 +35,7 @@ import {
 // Menu items configuration
 const menuItems = [
     { id: 'home', label: 'Dashboard', icon: HomeIcon, component: DashboardHome },
-    { id: 'users', label: 'Users', icon: UsersIcon, component: Users },
+    { id: 'crew', label: 'Crew Management', icon: CrewIcon, component: CrewManagement },
     { id: 'companies', label: 'Companies', icon: BuildingIcon, component: Companies },
     { id: 'vessels', label: 'Vessels', icon: ShipIcon, component: Vessels },
     { id: 'license', label: 'License', icon: LicenseIcon, component: License },
