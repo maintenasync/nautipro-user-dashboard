@@ -15,13 +15,15 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     const router = useRouter();
 
     useEffect(() => {
-        if (!state.isAuthenticated) {
+        // Hanya lakukan pengecekan dan redireksi setelah inisialisasi selesai
+        if (state.isInitialized && !state.isAuthenticated) {
             router.push('/login');
         }
-    }, [state.isAuthenticated, router]);
+    }, [state.isAuthenticated, state.isInitialized, router]); // Tambahkan isInitialized sebagai dependency
 
-    // Show loading spinner while checking authentication
-    if (!state.isAuthenticated) {
+    // Tampilkan loading spinner jika belum diinisialisasi ATAU belum terotentikasi
+    // dan proses inisialisasi sedang berlangsung
+    if (!state.isInitialized || !state.isAuthenticated) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="flex flex-col items-center">
@@ -35,5 +37,6 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
         );
     }
 
+    // Render children jika sudah diinisialisasi DAN terotentikasi
     return <>{children}</>;
 }

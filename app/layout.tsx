@@ -9,8 +9,8 @@ import { ThemeProvider } from './contexts/ThemeContext';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-    title: 'Maritime Dashboard - Nautipro Connect',
-    description: 'Maritime Dashboard Management System',
+    title: 'Maintena Sync Dashboard - Nautipro Connect Solution',
+    description: 'Planned Maintenance System',
 };
 
 export default function RootLayout({

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../contexts/AuthContext';
+import {LogoIcon} from '../dashboard/components/icons/Logos';
 
 export default function LoginPage() {
     const [formData, setFormData] = useState({
@@ -45,23 +46,22 @@ export default function LoginPage() {
         <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full space-y-8">
                 <div>
-                    <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100">
-                        <svg className="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                        </svg>
+                    <div
+                        className="flex-grow flex items-center justify-center">
+                        <LogoIcon className="h-16 w-auto text-blue-600"/>
                     </div>
                     <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
                         Sign in to your account
                     </h2>
                     <p className="mt-2 text-center text-sm text-gray-600">
-                        Maritime Dashboard Management System
+                       Maintena Sync Dashboard
                     </p>
                 </div>
 
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                     <div className="space-y-4">
                         <div>
-                            <label htmlFor="email_or_username" className="block text-sm font-medium text-gray-700">
+                        <label htmlFor="email_or_username" className="block text-sm font-medium text-gray-700">
                                 Email or Username
                             </label>
                             <input
@@ -151,29 +151,32 @@ export default function LoginPage() {
                     <div className="text-center">
                         <p className="text-sm text-gray-600">
                             Don't have an account?{' '}
-                            <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+                            {/*<Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">*/}
+                            {/*    Sign up here*/}
+                            {/*</Link>*/}
+                            <Link href="/" className="font-medium text-blue-600 hover:text-blue-500">
                                 Sign up here
                             </Link>
                         </p>
                     </div>
 
                     {/* Demo Credentials */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-                        <div className="flex">
-                            <div className="flex-shrink-0">
-                                <svg className="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <div className="ml-3">
-                                <h3 className="text-sm font-medium text-blue-800">Demo Credentials</h3>
-                                <div className="mt-2 text-sm text-blue-700">
-                                    <p>Username: demo</p>
-                                    <p>Password: korindo123</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    {/*<div className="bg-blue-50 border border-blue-200 rounded-md p-3">*/}
+                    {/*    <div className="flex">*/}
+                    {/*        <div className="flex-shrink-0">*/}
+                    {/*            <svg className="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">*/}
+                    {/*                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />*/}
+                    {/*            </svg>*/}
+                    {/*        </div>*/}
+                    {/*        <div className="ml-3">*/}
+                    {/*            <h3 className="text-sm font-medium text-blue-800">Demo Credentials</h3>*/}
+                    {/*            <div className="mt-2 text-sm text-blue-700">*/}
+                    {/*                <p>Username: demo</p>*/}
+                    {/*                <p>Password: korindo123</p>*/}
+                    {/*            </div>*/}
+                    {/*        </div>*/}
+                    {/*    </div>*/}
+                    {/*</div>*/}
                 </form>
             </div>
         </div>

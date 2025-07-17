@@ -34,7 +34,7 @@ export default function Sidebar({
         <div className={`bg-white shadow-lg transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-20'} flex-shrink-0`}> {/* Sesuaikan lebar w-20 atau w-16 agar sesuai dengan ikon */}
             <div className="flex flex-col h-full">
                 {/* Header dengan Logo dan Tombol Toggle */}
-                <div className="flex items-center justify-between p-4 border-b">
+                <div className="flex items-center justify-between p-4 border-b border-gray-100">
                     <div className="flex-grow flex items-center justify-center"> {/* Container untuk logo agar di tengah saat terbuka */}
                         {sidebarOpen ? (
                             <LogoFull className="h-8 w-auto text-blue-600" /> // Contoh logo penuh, sesuaikan ukuran dan warna
@@ -49,7 +49,7 @@ export default function Sidebar({
                         className="p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0 ml-2" // ml-2 untuk jarak dari logo
                         aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
                     >
-                        {sidebarOpen ? <XIcon className="h-6 w-6 text-gray-500" /> : <MenuIcon className="h-6 w-6 text-gray-500" />}
+                        {sidebarOpen ? <XIcon/> : <MenuIcon />}
                     </button>
                 </div>
 

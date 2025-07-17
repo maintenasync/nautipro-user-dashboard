@@ -15,7 +15,8 @@ type AuthAction =
     | { type: 'REGISTER_SUCCESS' }
     | { type: 'REGISTER_FAILURE' }
     | { type: 'LOGOUT' }
-    | { type: 'SET_USER'; payload: { user: User; token: string } };
+    | { type: 'SET_USER'; payload: { user: User; token: string } }
+    | { type: 'INITIALIZE_AUTH_COMPLETE' };
 
 // Initial state
 const initialState: AuthState = {
@@ -23,6 +24,7 @@ const initialState: AuthState = {
     token: null,
     isAuthenticated: false,
     isLoading: false,
+    isInitialized: false,
 };
 
 // Auth reducer
@@ -41,6 +43,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
                 token: action.payload.token,
                 isAuthenticated: true,
                 isLoading: false,
+                isInitialized: true,
             };
         case 'REGISTER_SUCCESS':
             return {
@@ -52,10 +55,12 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
             return {
                 ...state,
                 isLoading: false,
+                isInitialized: true,
             };
         case 'LOGOUT':
             return {
                 ...initialState,
+                isInitialized: true,
             };
         case 'SET_USER':
             return {
@@ -63,6 +68,12 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
                 user: action.payload.user,
                 token: action.payload.token,
                 isAuthenticated: true,
+                isInitialized: true,
+            };
+        case 'INITIALIZE_AUTH_COMPLETE': // <-- Case baru
+            return {
+                ...state,
+                isInitialized: true,
             };
         default:
             return state;
@@ -105,6 +116,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     token,
                 },
             });
+        }else {
+            // Penting: Ini dijalankan jika tidak ada token,
+            // menandakan bahwa proses inisialisasi dari localStorage sudah selesai
+            dispatch({ type: 'INITIALIZE_AUTH_COMPLETE' });
         }
     }, []);
 
