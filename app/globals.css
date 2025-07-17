@@ -2,7 +2,7 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #505050;
 }
 
 @theme inline {
@@ -15,24 +15,24 @@
 /* Light mode (default) */
 [data-theme="light"] {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #343434;
 }
 
 /* Dark mode */
 [data-theme="dark"] {
-  --background: #0a0a0a;
+  --background: #505050;
   --foreground: #ededed;
 }
 
 /* Auto mode - ikuti sistem */
 [data-theme="auto"] {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #505050;
 }
 
 @media (prefers-color-scheme: dark) {
   [data-theme="auto"] {
-    --background: #0a0a0a;
+    --background: #505050;
     --foreground: #ededed;
   }
 }
