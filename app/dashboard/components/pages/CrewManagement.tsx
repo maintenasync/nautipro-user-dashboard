@@ -17,7 +17,7 @@ interface CrewMember {
 }
 
 export default function CrewManagement() {
-    const [crewMembers, setCrewMembers] = useState<CrewMember[]>([
+    const [crewMembers] = useState<CrewMember[]>([
         { id: 1, name: 'John Smith', email: 'john.smith@maritime.com', role: 'Captain', vessel: 'Ocean Explorer', startDate: '2023-01-15', status: 'Active' },
         { id: 2, name: 'Maria Santos', email: 'maria.santos@maritime.com', role: 'Chief Engineer', vessel: 'Ocean Explorer', startDate: '2023-02-20', status: 'Active' },
         { id: 3, name: 'Ahmed Hassan', email: 'ahmed.hassan@maritime.com', role: 'Crew Deck', vessel: 'Sea Pioneer', startDate: '2023-03-10', status: 'Active' },
@@ -224,7 +224,7 @@ export default function CrewManagement() {
                     <div className="mt-3 flex flex-wrap gap-2">
                         {filters.search && (
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                Search: "{filters.search}"
+                Search: {filters.search}
                 <button
                     onClick={() => handleFilterChange('search', '')}
                     className="ml-1 text-blue-600 hover:text-blue-800"

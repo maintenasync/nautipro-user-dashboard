@@ -150,8 +150,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 dispatch({ type: 'LOGIN_FAILURE' });
                 return false;
             }
-        } catch (error) {
+        } catch (error : unknown) {
             dispatch({ type: 'LOGIN_FAILURE' });
+            console.error('Login error:', error);
             return false;
         }
     };
@@ -169,8 +170,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 dispatch({ type: 'REGISTER_FAILURE' });
                 return false;
             }
-        } catch (error) {
+        } catch (error: unknown) {
             dispatch({ type: 'REGISTER_FAILURE' });
+            console.error('Registration error:', error);
             return false;
         }
     };

@@ -15,7 +15,7 @@ export interface InviteCrewResponse {
     code: number;
     status: string;
     message?: string;
-    data?: any;
+    data?: unknown;
 }
 
 class CrewService {

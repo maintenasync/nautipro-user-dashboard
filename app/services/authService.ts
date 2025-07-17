@@ -1,6 +1,6 @@
 // services/authService.ts
 
-import { LoginRequest, RegisterRequest, AuthResponse } from '../types/auth';
+import { LoginRequest, RegisterRequest, AuthResponse, User } from '../types/auth';
 
 const BASE_URL = 'https://auth.nautiproconnect.com/api/v1/web';
 const API_KEY = '12345678';
@@ -70,7 +70,7 @@ class AuthService {
     }
 
     // Get stored user data
-    getUserData(): any {
+    getUserData(): User | null {
         if (typeof window !== 'undefined') {
             const userData = localStorage.getItem('user_data');
             return userData ? JSON.parse(userData) : null;

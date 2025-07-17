@@ -271,7 +271,7 @@ export default function VesselDetailDialog({ isOpen, vesselId, onClose, onEdit }
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
-                                onClick={() => setActiveTab(tab.id as any)}
+                                onClick={() => setActiveTab(tab.id as never)}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-150 ${
                                     activeTab === tab.id
                                         ? 'border-blue-500 text-blue-600 [data-theme=\'dark\']_&:text-blue-400'

@@ -6,8 +6,8 @@ import { LogoFull, LogoIcon } from '../icons/Logos';
 interface MenuItem {
     id: string;
     label: string;
-    icon: React.ComponentType;
-    component: React.ComponentType;
+    icon: React.ComponentType<{ className?: string }>;
+    component: React.ComponentType<unknown>;
 }
 
 interface SidebarProps {

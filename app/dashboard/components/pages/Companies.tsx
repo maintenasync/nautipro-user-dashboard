@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import CreateCompanyDialog from '../dialogs/CreateCompanyDialog';
 import CompanyDetailDialog from '../dialogs/CompanyDetailDialog';
+import {CompanyFormData} from "@/app/types/company";
 
 interface Company {
     id: number;
@@ -43,7 +44,7 @@ export default function Companies() {
         setSelectedCompanyId(null);
     };
 
-    const handleSubmitCompany = async (companyData: any) => {
+    const handleSubmitCompany = async (companyData: CompanyFormData) => {
         // Simulate API call
         console.log('Creating company:', companyData);
 
@@ -53,7 +54,7 @@ export default function Companies() {
             name: companyData.name,
             location: companyData.city + ', ' + companyData.country,
             vessels: 0,
-            created: new Date().toISOString().split('T')[0]
+            created: "",
         };
 
         // Add to companies list

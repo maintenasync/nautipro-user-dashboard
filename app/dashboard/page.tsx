@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import {useState} from 'react';
 import ProtectedRoute from '../components/ProtectedRoute';
 
 // Import layout components
@@ -34,14 +34,18 @@ import {
 
 // Menu items configuration
 const menuItems = [
-    { id: 'home', label: 'Dashboard', icon: HomeIcon, component: DashboardHome },
-    { id: 'crew', label: 'Crew Management', icon: CrewIcon, component: CrewManagement },
-    { id: 'companies', label: 'Companies', icon: BuildingIcon, component: Companies },
-    { id: 'vessels', label: 'Vessels', icon: ShipIcon, component: Vessels },
-    { id: 'license', label: 'License', icon: LicenseIcon, component: License },
-    { id: 'notification', label: 'Notification Setting', icon: NotificationIcon, component: NotificationSetting },
-    { id: 'settings', label: 'Settings', icon: SettingsIcon, component: Settings },
+    {id: 'home', label: 'Dashboard', icon: HomeIcon, component: DashboardHome},
+    {id: 'crew', label: 'Crew Management', icon: CrewIcon, component: CrewManagement},
+    {id: 'companies', label: 'Companies', icon: BuildingIcon, component: Companies},
+    {id: 'vessels', label: 'Vessels', icon: ShipIcon, component: Vessels},
+    {id: 'license', label: 'License', icon: LicenseIcon, component: License},
+    {id: 'notification', label: 'Notification Setting', icon: NotificationIcon, component: NotificationSetting},
+    {id: 'settings', label: 'Settings', icon: SettingsIcon, component: Settings},
 ];
+
+// interface ComponentProps {
+//     onNavigateToCreate?: () => void
+// }
 
 function DashboardContent() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -50,18 +54,18 @@ function DashboardContent() {
     const [selectedVesselId, setSelectedVesselId] = useState<number | null>(null);
 
     // Navigation handlers
-    const handleNavigateToCreateCompany = () => {
-        setCurrentView('create-company');
-    };
-
-    const handleNavigateToCreateVessel = () => {
-        setCurrentView('create-vessel');
-    };
-
-    const handleNavigateToVesselDetail = (vesselId: number) => {
-        setSelectedVesselId(vesselId);
-        setCurrentView('vessel-detail');
-    };
+    // const handleNavigateToCreateCompany = () => {
+    //     setCurrentView('create-company');
+    // };
+    //
+    // const handleNavigateToCreateVessel = () => {
+    //     setCurrentView('create-vessel');
+    // };
+    //
+    // const handleNavigateToVesselDetail = (vesselId: number) => {
+    //     setSelectedVesselId(vesselId);
+    //     setCurrentView('vessel-detail');
+    // };
 
     const handleBackToMain = () => {
         setCurrentView('main');
@@ -69,7 +73,7 @@ function DashboardContent() {
     };
 
     // Handle form submissions
-    const handleCreateCompany = (companyData: any) => {
+    const handleCreateCompany = (companyData: unknown) => {
         console.log('Creating company:', companyData);
         // Here you would typically make an API call to save the company
         // For now, we'll just go back to the main view
@@ -77,7 +81,7 @@ function DashboardContent() {
         setActiveMenuItem('companies');
     };
 
-    const handleCreateVessel = (vesselData: any) => {
+    const handleCreateVessel = (vesselData: unknown) => {
         console.log('Creating vessel:', vesselData);
         // Here you would typically make an API call to save the vessel
         // For now, we'll just go back to the main view
@@ -88,36 +92,24 @@ function DashboardContent() {
     // Get the active component based on current view
     const getActiveComponent = () => {
         if (currentView === 'create-company') {
-            return <CreateCompany onBack={handleBackToMain} onSubmit={handleCreateCompany} />;
+            return <CreateCompany onBack={handleBackToMain} onSubmit={handleCreateCompany}/>;
         }
 
         if (currentView === 'create-vessel') {
-            return <CreateVessel onBack={handleBackToMain} onSubmit={handleCreateVessel} />;
+            return <CreateVessel onBack={handleBackToMain} onSubmit={handleCreateVessel}/>;
         }
 
         if (currentView === 'vessel-detail' && selectedVesselId) {
-            return <VesselDetail vesselId={selectedVesselId} onBack={handleBackToMain} />;
+            return <VesselDetail vesselId={selectedVesselId} onBack={handleBackToMain}/>;
         }
 
         // Main view - render the selected menu component
         const menuItem = menuItems.find(item => item.id === activeMenuItem);
-        if (!menuItem) return <DashboardHome />;
+        if (!menuItem) return <DashboardHome/>;
 
         const Component = menuItem.component;
 
-        // Pass navigation props for companies and vessels
-        if (activeMenuItem === 'companies') {
-            return <Component onNavigateToCreate={handleNavigateToCreateCompany} />;
-        }
-
-        if (activeMenuItem === 'vessels') {
-            return <Component
-                onNavigateToCreate={handleNavigateToCreateVessel}
-                onNavigateToDetail={handleNavigateToVesselDetail}
-            />;
-        }
-
-        return <Component />;
+        return <Component/>;
     };
 
     return (
@@ -151,7 +143,7 @@ function DashboardContent() {
 export default function DashboardPage() {
     return (
         <ProtectedRoute>
-            <DashboardContent />
+            <DashboardContent/>
         </ProtectedRoute>
     );
 }

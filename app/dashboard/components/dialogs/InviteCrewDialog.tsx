@@ -143,6 +143,7 @@ export default function InviteCrewDialog({ isOpen, onClose, onSuccess }: InviteC
                 setError(response.message || 'Failed to send invitation');
             }
         } catch (error) {
+            console.error('Error inviting crew member:', error);
             setError('Failed to send invitation. Please try again.');
         } finally {
             setIsLoading(false);

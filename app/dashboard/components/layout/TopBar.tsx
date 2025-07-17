@@ -1,9 +1,10 @@
 // app/dashboard/components/layout/TopBar.tsx
 
-import { SearchIcon, BellIcon, UserIcon } from '../icons/Icons';
+import { BellIcon, UserIcon } from '../icons/Icons';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useTheme } from '@/app/contexts/ThemeContext';
 import { useState } from 'react';
+import Image from "next/image";
 
 interface MenuItem {
     id: string;
@@ -169,10 +170,12 @@ export default function TopBar({ menuItems, activeMenuItem }: TopBarProps) {
                     <div className="relative group">
                         <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 [data-theme='dark']_&:hover:bg-gray-700">
                             {state.user?.avatar ? (
-                                <img
+                                <Image
                                     src={state.user.avatar}
                                     alt="Profile"
                                     className="w-8 h-8 rounded-full"
+                                    width={32}
+                                    height={32}
                                 />
                             ) : (
                                 <UserIcon />

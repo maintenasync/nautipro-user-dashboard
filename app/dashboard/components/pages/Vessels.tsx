@@ -81,7 +81,7 @@ export default function Vessels() {
         setSelectedVesselId(null);
     };
 
-    const handleSubmitVessel = async (vesselData: any) => {
+    const handleSubmitVessel = async (vesselData: { name: string; vesselType: string; company: string; imo: string; }) => {
         // Simulate API call
         console.log('Creating vessel:', vesselData);
 
@@ -92,7 +92,7 @@ export default function Vessels() {
             type: vesselData.vesselType,
             company: vesselData.company || 'Unassigned',
             status: 'Active',
-            imo: vesselData.imo || `IMO${Math.floor(Math.random() * 9000000) + 1000000}`
+            imo: vesselData.imo || 'IMO0000000'
         };
 
         // Add to vessels list
