@@ -3,6 +3,7 @@
 'use client';
 
 import { useState } from 'react';
+import ProtectedRoute from '../components/ProtectedRoute';
 
 // Import layout components
 import Sidebar from './components/layout/Sidebar';
@@ -18,6 +19,7 @@ import Users from './components/pages/Users';
 import Settings from './components/pages/Settings';
 import CreateCompany from './components/pages/CreateCompany';
 import CreateVessel from './components/pages/CreateVessel';
+import VesselDetail from './components/pages/VesselDetail';
 
 // Import icons
 import {
@@ -41,10 +43,11 @@ const menuItems = [
     { id: 'settings', label: 'Settings', icon: SettingsIcon, component: Settings },
 ];
 
-export default function DashboardPage() {
+function DashboardContent() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [activeMenuItem, setActiveMenuItem] = useState('home');
-    const [currentView, setCurrentView] = useState<'main' | 'create-company' | 'create-vessel'>('main');
+    const [currentView, setCurrentView] = useState<'main' | 'create-company' | 'create-vessel' | 'vessel-detail'>('main');
+    const [selectedVesselId, setSelectedVesselId] = useState<number | null>(null);
 
     // Navigation handlers
     const handleNavigateToCreateCompany = () => {
@@ -55,8 +58,14 @@ export default function DashboardPage() {
         setCurrentView('create-vessel');
     };
 
+    const handleNavigateToVesselDetail = (vesselId: number) => {
+        setSelectedVesselId(vesselId);
+        setCurrentView('vessel-detail');
+    };
+
     const handleBackToMain = () => {
         setCurrentView('main');
+        setSelectedVesselId(null);
     };
 
     // Handle form submissions
@@ -86,6 +95,10 @@ export default function DashboardPage() {
             return <CreateVessel onBack={handleBackToMain} onSubmit={handleCreateVessel} />;
         }
 
+        if (currentView === 'vessel-detail' && selectedVesselId) {
+            return <VesselDetail vesselId={selectedVesselId} onBack={handleBackToMain} />;
+        }
+
         // Main view - render the selected menu component
         const menuItem = menuItems.find(item => item.id === activeMenuItem);
         if (!menuItem) return <DashboardHome />;
@@ -98,7 +111,10 @@ export default function DashboardPage() {
         }
 
         if (activeMenuItem === 'vessels') {
-            return <Component onNavigateToCreate={handleNavigateToCreateVessel} />;
+            return <Component
+                onNavigateToCreate={handleNavigateToCreateVessel}
+                onNavigateToDetail={handleNavigateToVesselDetail}
+            />;
         }
 
         return <Component />;
@@ -129,5 +145,13 @@ export default function DashboardPage() {
                 </main>
             </div>
         </div>
+    );
+}
+
+export default function DashboardPage() {
+    return (
+        <ProtectedRoute>
+            <DashboardContent />
+        </ProtectedRoute>
     );
 }

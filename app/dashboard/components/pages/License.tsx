@@ -13,7 +13,7 @@ export default function License() {
     const licenses: License[] = [
         {
             id: 1,
-            name: 'Navigation License',
+            name: 'Maintena Sync License',
             vessel: 'Ocean Explorer',
             issueDate: '2024-01-15',
             expiryDate: '2025-01-15',
@@ -21,7 +21,7 @@ export default function License() {
         },
         {
             id: 2,
-            name: 'Safety Certificate',
+            name: 'Maintena Sync License',
             vessel: 'Sea Pioneer',
             issueDate: '2024-02-20',
             expiryDate: '2025-02-20',
@@ -29,7 +29,7 @@ export default function License() {
         },
         {
             id: 3,
-            name: 'Environmental Permit',
+            name: 'Maintena Sync License',
             vessel: 'Wave Rider',
             issueDate: '2024-03-10',
             expiryDate: '2024-12-10',
