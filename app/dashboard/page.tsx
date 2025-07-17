@@ -1,0 +1,133 @@
+// app/dashboard/page.tsx
+
+'use client';
+
+import { useState } from 'react';
+
+// Import layout components
+import Sidebar from './components/layout/Sidebar';
+import TopBar from './components/layout/TopBar';
+
+// Import page components
+import DashboardHome from './components/pages/DashboardHome';
+import Companies from './components/pages/Companies';
+import Vessels from './components/pages/Vessels';
+import License from './components/pages/License';
+import NotificationSetting from './components/pages/NotificationSetting';
+import Users from './components/pages/Users';
+import Settings from './components/pages/Settings';
+import CreateCompany from './components/pages/CreateCompany';
+import CreateVessel from './components/pages/CreateVessel';
+
+// Import icons
+import {
+    HomeIcon,
+    UsersIcon,
+    BuildingIcon,
+    ShipIcon,
+    LicenseIcon,
+    NotificationIcon,
+    SettingsIcon
+} from './components/icons/Icons';
+
+// Menu items configuration
+const menuItems = [
+    { id: 'home', label: 'Dashboard', icon: HomeIcon, component: DashboardHome },
+    { id: 'users', label: 'Users', icon: UsersIcon, component: Users },
+    { id: 'companies', label: 'Companies', icon: BuildingIcon, component: Companies },
+    { id: 'vessels', label: 'Vessels', icon: ShipIcon, component: Vessels },
+    { id: 'license', label: 'License', icon: LicenseIcon, component: License },
+    { id: 'notification', label: 'Notification Setting', icon: NotificationIcon, component: NotificationSetting },
+    { id: 'settings', label: 'Settings', icon: SettingsIcon, component: Settings },
+];
+
+export default function DashboardPage() {
+    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [activeMenuItem, setActiveMenuItem] = useState('home');
+    const [currentView, setCurrentView] = useState<'main' | 'create-company' | 'create-vessel'>('main');
+
+    // Navigation handlers
+    const handleNavigateToCreateCompany = () => {
+        setCurrentView('create-company');
+    };
+
+    const handleNavigateToCreateVessel = () => {
+        setCurrentView('create-vessel');
+    };
+
+    const handleBackToMain = () => {
+        setCurrentView('main');
+    };
+
+    // Handle form submissions
+    const handleCreateCompany = (companyData: any) => {
+        console.log('Creating company:', companyData);
+        // Here you would typically make an API call to save the company
+        // For now, we'll just go back to the main view
+        setCurrentView('main');
+        setActiveMenuItem('companies');
+    };
+
+    const handleCreateVessel = (vesselData: any) => {
+        console.log('Creating vessel:', vesselData);
+        // Here you would typically make an API call to save the vessel
+        // For now, we'll just go back to the main view
+        setCurrentView('main');
+        setActiveMenuItem('vessels');
+    };
+
+    // Get the active component based on current view
+    const getActiveComponent = () => {
+        if (currentView === 'create-company') {
+            return <CreateCompany onBack={handleBackToMain} onSubmit={handleCreateCompany} />;
+        }
+
+        if (currentView === 'create-vessel') {
+            return <CreateVessel onBack={handleBackToMain} onSubmit={handleCreateVessel} />;
+        }
+
+        // Main view - render the selected menu component
+        const menuItem = menuItems.find(item => item.id === activeMenuItem);
+        if (!menuItem) return <DashboardHome />;
+
+        const Component = menuItem.component;
+
+        // Pass navigation props for companies and vessels
+        if (activeMenuItem === 'companies') {
+            return <Component onNavigateToCreate={handleNavigateToCreateCompany} />;
+        }
+
+        if (activeMenuItem === 'vessels') {
+            return <Component onNavigateToCreate={handleNavigateToCreateVessel} />;
+        }
+
+        return <Component />;
+    };
+
+    return (
+        <div className="flex h-screen bg-gray-100">
+            {/* Sidebar */}
+            <Sidebar
+                sidebarOpen={sidebarOpen}
+                setSidebarOpen={setSidebarOpen}
+                menuItems={menuItems}
+                activeMenuItem={activeMenuItem}
+                setActiveMenuItem={setActiveMenuItem}
+            />
+
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col">
+                {/* Top Bar */}
+                <TopBar
+                    menuItems={menuItems}
+                    activeMenuItem={activeMenuItem}
+                />
+
+                {/* Content Area */}
+                <main className="flex-1 overflow-y-auto bg-gray-50">
+                    {getActiveComponent()}
+                </main>
+            </div>
+        </div>
+    );
+}
