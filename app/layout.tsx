@@ -4,13 +4,13 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from './contexts/AuthContext';
-import { ThemeProvider } from './contexts/ThemeContext';
+import ClientThemeProvider from './components/providers/ClientThemeProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-    title: 'Maintena Sync Dashboard - Nautipro Connect Solution',
-    description: 'Planned Maintenance System',
+    title: 'Maritime Dashboard - Nautipro Connect',
+    description: 'Maritime Dashboard Management System',
 };
 
 export default function RootLayout({
@@ -19,13 +19,13 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en">
-        <body className={inter.className}>
-        <ThemeProvider>
+        <html lang="en" suppressHydrationWarning>
+        <body className={inter.className} suppressHydrationWarning>
+        <ClientThemeProvider>
             <AuthProvider>
                 {children}
             </AuthProvider>
-        </ThemeProvider>
+        </ClientThemeProvider>
         </body>
         </html>
     );
