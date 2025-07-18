@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useToast, Toast } from '../../../hooks/useToast';
+import { Toast } from '../../../hooks/useToast';
 import NotificationToast from './NotificationToast';
 
 interface ToastContainerProps {

@@ -3,101 +3,32 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useCompany, useVesselsByCompany, useCrewsByCompany } from '@/app/hooks/useApiQuery';
+import Image from "next/image";
 
 interface CompanyDetailDialogProps {
     isOpen: boolean;
-    companyId: number | null;
+    companyId: string | null;
     onClose: () => void;
-    onEdit?: (companyId: number) => void;
+    onEdit?: (companyId: string) => void;
+    onDelete?: (companyId: string) => void;
 }
 
-interface CompanyDetails {
-    id: number;
-    name: string;
-    registrationNumber: string;
-    address: string;
-    city: string;
-    province: string;
-    postalCode: string;
-    country: string;
-    phone: string;
-    email: string;
-    website: string;
-    logo: string;
-    // Additional details
-    established: string;
-    ceo: string;
-    employees: number;
-    fleetSize: number;
-    totalTonnage: number;
-    operationalStatus: string;
-    // Vessels
-    vessels: {
-        id: number;
-        name: string;
-        type: string;
-        status: string;
-        imo: string;
-    }[];
-    // Licenses
-    licenses: {
-        id: number;
-        name: string;
-        issueDate: string;
-        expiryDate: string;
-        status: string;
-    }[];
-    // Financial
-    financialInfo: {
-        revenue: number;
-        assets: number;
-        yearlyGrowth: number;
-        rating: string;
-    };
-}
-
-export default function CompanyDetailDialog({ isOpen, companyId, onClose, onEdit }: CompanyDetailDialogProps) {
-    const [activeTab, setActiveTab] = useState<'overview' | 'vessels' | 'licenses' | 'financial'>('overview');
+export default function CompanyDetailDialog({
+                                                isOpen,
+                                                companyId,
+                                                onClose,
+                                                onEdit,
+                                                onDelete
+                                            }: CompanyDetailDialogProps) {
+    const [activeTab, setActiveTab] = useState<'overview' | 'vessels' | 'crews' | 'statistics'>('overview');
     const [isVisible, setIsVisible] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
 
-    // Mock data - in real app, this would come from API based on companyId
-    const companyDetails: CompanyDetails = {
-        id: companyId || 1,
-        name: 'Ocean Shipping Ltd',
-        registrationNumber: 'SG-2018-OSL-001',
-        address: '123 Marina Bay Drive',
-        city: 'Singapore',
-        province: 'Central Singapore',
-        postalCode: '018956',
-        country: 'Singapore',
-        phone: '+65 6123 4567',
-        email: 'info@oceanshipping.com',
-        website: 'https://www.oceanshipping.com',
-        logo: '/api/placeholder/150/150',
-        established: '2018-03-15',
-        ceo: 'John Maritime',
-        employees: 150,
-        fleetSize: 12,
-        totalTonnage: 450000,
-        operationalStatus: 'Active',
-        vessels: [
-            { id: 1, name: 'Ocean Explorer', type: 'Cargo Ship', status: 'Active', imo: 'IMO1234567' },
-            { id: 2, name: 'Deep Blue', type: 'Bulk Carrier', status: 'Active', imo: 'IMO4567890' },
-            { id: 3, name: 'Sea Master', type: 'Tanker', status: 'Maintenance', imo: 'IMO7890123' },
-        ],
-        licenses: [
-            { id: 1, name: 'Maritime Operation License', issueDate: '2024-01-15', expiryDate: '2025-01-15', status: 'Active' },
-            { id: 2, name: 'International Shipping Permit', issueDate: '2024-03-10', expiryDate: '2025-03-10', status: 'Active' },
-            { id: 3, name: 'Environmental Compliance Certificate', issueDate: '2024-06-01', expiryDate: '2024-12-01', status: 'Expiring Soon' },
-        ],
-        financialInfo: {
-            revenue: 125000000,
-            assets: 280000000,
-            yearlyGrowth: 12.5,
-            rating: 'A+'
-        }
-    };
+    // Fetch data using API hooks
+    const { data: company, isLoading: companyLoading, error: companyError } = useCompany(companyId || '');
+    const { data: vessels = [], isLoading: vesselsLoading } = useVesselsByCompany(companyId || '');
+    const { data: crews = [], isLoading: crewsLoading } = useCrewsByCompany(companyId || '');
 
     // Handle dialog visibility with animation
     useEffect(() => {
@@ -119,8 +50,8 @@ export default function CompanyDetailDialog({ isOpen, companyId, onClose, onEdit
     const tabs = [
         { id: 'overview', label: 'Overview', icon: '🏢' },
         { id: 'vessels', label: 'Fleet', icon: '🚢' },
-        { id: 'licenses', label: 'Licenses', icon: '📋' },
-        { id: 'financial', label: 'Financial', icon: '💰' }
+        { id: 'crews', label: 'Crew', icon: '👥' },
+        { id: 'statistics', label: 'Statistics', icon: '📊' }
     ];
 
     const getStatusColor = (status: string) => {
@@ -137,15 +68,6 @@ export default function CompanyDetailDialog({ isOpen, companyId, onClose, onEdit
             default:
                 return 'bg-gray-100 text-gray-800 [data-theme=\'dark\']_&:bg-gray-700 [data-theme=\'dark\']_&:text-gray-200';
         }
-    };
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            notation: 'compact',
-            maximumFractionDigits: 1
-        }).format(amount);
     };
 
     const handleClose = () => {
@@ -165,7 +87,73 @@ export default function CompanyDetailDialog({ isOpen, companyId, onClose, onEdit
         }
     };
 
+    const handleDelete = () => {
+        if (onDelete && companyId && company) {
+            if (window.confirm(`Are you sure you want to delete ${company.name}?`)) {
+                onDelete(companyId);
+                handleClose();
+            }
+        }
+    };
+
     if (!isVisible || !companyId) return null;
+
+    // Loading state
+    if (companyLoading) {
+        return (
+            <div className={`fixed inset-0 flex items-center justify-center z-50 p-4 bg-opacity-50 backdrop-blur-sm`}>
+                <div className="bg-white rounded-lg w-full max-w-6xl p-8 shadow-2xl [data-theme='dark']_&:bg-gray-800">
+                    <div className="animate-pulse">
+                        <div className="flex items-center space-x-4 mb-6">
+                            <div className="w-16 h-16 bg-gray-200 rounded-lg [data-theme='dark']_&:bg-gray-700"></div>
+                            <div className="space-y-2">
+                                <div className="h-6 bg-gray-200 rounded w-48 [data-theme='dark']_&:bg-gray-700"></div>
+                                <div className="h-4 bg-gray-200 rounded w-32 [data-theme='dark']_&:bg-gray-700"></div>
+                            </div>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="h-4 bg-gray-200 rounded [data-theme='dark']_&:bg-gray-700"></div>
+                            <div className="h-4 bg-gray-200 rounded w-3/4 [data-theme='dark']_&:bg-gray-700"></div>
+                            <div className="h-4 bg-gray-200 rounded w-1/2 [data-theme='dark']_&:bg-gray-700"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Error state
+    if (companyError || !company) {
+        return (
+            <div className={`fixed inset-0 flex items-center justify-center z-50 p-4 bg-opacity-50 backdrop-blur-sm`}>
+                <div className="bg-white rounded-lg w-full max-w-md p-6 shadow-2xl [data-theme='dark']_&:bg-gray-800">
+                    <div className="text-center">
+                        <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 [data-theme='dark']_&:bg-red-900">
+                            <svg className="h-6 w-6 text-red-600 [data-theme='dark']_&:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </div>
+                        <div className="mt-3">
+                            <h3 className="text-lg font-medium text-gray-900 [data-theme='dark']_&:text-white">Error loading company</h3>
+                            <div className="mt-2">
+                                <p className="text-sm text-gray-500 [data-theme='dark']_&:text-gray-400">
+                                    Unable to load company details. Please try again later.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="mt-6">
+                            <button
+                                onClick={handleClose}
+                                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div
@@ -190,28 +178,38 @@ export default function CompanyDetailDialog({ isOpen, companyId, onClose, onEdit
                         {/* Company Logo */}
                         <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
                             <span className="text-white font-bold text-xl">
-                                {companyDetails.name.split(' ').map(word => word[0]).join('').substring(0, 2)}
+                                {company.name.split(' ').map(word => word[0]).join('').substring(0, 2)}
                             </span>
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold text-gray-900 [data-theme='dark']_&:text-white">{companyDetails.name}</h2>
+                            <h2 className="text-2xl font-bold text-gray-900 [data-theme='dark']_&:text-white">{company.name}</h2>
                             <div className="flex items-center space-x-3 mt-1">
-                                <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(companyDetails.operationalStatus)}`}>
-                                    {companyDetails.operationalStatus}
+                                <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 [data-theme='dark']_&:bg-green-900 [data-theme='dark']_&:text-green-200">
+                                    Active
                                 </span>
                                 <span className="text-sm text-gray-500 [data-theme='dark']_&:text-gray-400">
-                                    {companyDetails.registrationNumber}
+                                    {company.location}
                                 </span>
                             </div>
                         </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                        <button
-                            onClick={handleEdit}
-                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-150 text-sm"
-                        >
-                            Edit Company
-                        </button>
+                        {onEdit && (
+                            <button
+                                onClick={handleEdit}
+                                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-150 text-sm"
+                            >
+                                Edit Company
+                            </button>
+                        )}
+                        {onDelete && (
+                            <button
+                                onClick={handleDelete}
+                                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors duration-150 text-sm"
+                            >
+                                Delete
+                            </button>
+                        )}
                         <button
                             onClick={handleClose}
                             className="text-gray-400 hover:text-gray-600 p-2 rounded-md hover:bg-gray-100 transition-colors duration-150 [data-theme='dark']_&:hover:bg-gray-700"
@@ -250,25 +248,27 @@ export default function CompanyDetailDialog({ isOpen, companyId, onClose, onEdit
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div className="bg-blue-50 p-4 rounded-lg [data-theme='dark']_&:bg-blue-900">
                                     <h4 className="text-sm font-medium text-blue-600 [data-theme='dark']_&:text-blue-300">Fleet Size</h4>
-                                    <p className="text-2xl font-bold text-blue-900 [data-theme='dark']_&:text-blue-100">{companyDetails.fleetSize}</p>
+                                    <p className="text-2xl font-bold text-blue-900 [data-theme='dark']_&:text-blue-100">{vessels.length}</p>
                                     <p className="text-sm text-blue-600 [data-theme='dark']_&:text-blue-300">Active Vessels</p>
                                 </div>
                                 <div className="bg-green-50 p-4 rounded-lg [data-theme='dark']_&:bg-green-900">
-                                    <h4 className="text-sm font-medium text-green-600 [data-theme='dark']_&:text-green-300">Total Tonnage</h4>
-                                    <p className="text-2xl font-bold text-green-900 [data-theme='dark']_&:text-green-100">{companyDetails.totalTonnage.toLocaleString()}</p>
-                                    <p className="text-sm text-green-600 [data-theme='dark']_&:text-green-300">MT Combined</p>
+                                    <h4 className="text-sm font-medium text-green-600 [data-theme='dark']_&:text-green-300">Total Crew</h4>
+                                    <p className="text-2xl font-bold text-green-900 [data-theme='dark']_&:text-green-100">{crews.length}</p>
+                                    <p className="text-sm text-green-600 [data-theme='dark']_&:text-green-300">Crew Members</p>
                                 </div>
                                 <div className="bg-purple-50 p-4 rounded-lg [data-theme='dark']_&:bg-purple-900">
-                                    <h4 className="text-sm font-medium text-purple-600 [data-theme='dark']_&:text-purple-300">Employees</h4>
-                                    <p className="text-2xl font-bold text-purple-900 [data-theme='dark']_&:text-purple-100">{companyDetails.employees}</p>
-                                    <p className="text-sm text-purple-600 [data-theme='dark']_&:text-purple-300">Total Staff</p>
+                                    <h4 className="text-sm font-medium text-purple-600 [data-theme='dark']_&:text-purple-300">Active Crews</h4>
+                                    <p className="text-2xl font-bold text-purple-900 [data-theme='dark']_&:text-purple-100">
+                                        {crews.filter(c => c.status === 'Active').length}
+                                    </p>
+                                    <p className="text-sm text-purple-600 [data-theme='dark']_&:text-purple-300">Working Now</p>
                                 </div>
                                 <div className="bg-orange-50 p-4 rounded-lg [data-theme='dark']_&:bg-orange-900">
-                                    <h4 className="text-sm font-medium text-orange-600 [data-theme='dark']_&:text-orange-300">Est. Years</h4>
+                                    <h4 className="text-sm font-medium text-orange-600 [data-theme='dark']_&:text-orange-300">Established</h4>
                                     <p className="text-2xl font-bold text-orange-900 [data-theme='dark']_&:text-orange-100">
-                                        {new Date().getFullYear() - new Date(companyDetails.established).getFullYear()}
+                                        {company.created}
                                     </p>
-                                    <p className="text-sm text-orange-600 [data-theme='dark']_&:text-orange-300">Years Operating</p>
+                                    <p className="text-sm text-orange-600 [data-theme='dark']_&:text-orange-300">Company Founded</p>
                                 </div>
                             </div>
 
@@ -279,47 +279,49 @@ export default function CompanyDetailDialog({ isOpen, companyId, onClose, onEdit
                                     <h4 className="font-semibold text-gray-800 [data-theme='dark']_&:text-gray-200 mb-4">Company Information</h4>
                                     <div className="space-y-3 text-sm">
                                         <div className="flex justify-between">
-                                            <span className="text-gray-600 [data-theme='dark']_&:text-gray-400">Registration:</span>
-                                            <span className="font-medium [data-theme='dark']_&:text-gray-200">{companyDetails.registrationNumber}</span>
+                                            <span className="text-gray-600 [data-theme='dark']_&:text-gray-400">Company ID:</span>
+                                            <span className="font-medium [data-theme='dark']_&:text-gray-200">{company.id}</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-gray-600 [data-theme='dark']_&:text-gray-400">Established:</span>
-                                            <span className="font-medium [data-theme='dark']_&:text-gray-200">{new Date(companyDetails.established).toLocaleDateString()}</span>
+                                            <span className="text-gray-600 [data-theme='dark']_&:text-gray-400">Location:</span>
+                                            <span className="font-medium [data-theme='dark']_&:text-gray-200">{company.location}</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-gray-600 [data-theme='dark']_&:text-gray-400">CEO:</span>
-                                            <span className="font-medium [data-theme='dark']_&:text-gray-200">{companyDetails.ceo}</span>
+                                            <span className="text-gray-600 [data-theme='dark']_&:text-gray-400">Founded:</span>
+                                            <span className="font-medium [data-theme='dark']_&:text-gray-200">{company.created}</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-gray-600 [data-theme='dark']_&:text-gray-400">Website:</span>
-                                            <a href={companyDetails.website} className="font-medium text-blue-600 hover:text-blue-800 [data-theme='dark']_&:text-blue-400" target="_blank" rel="noopener noreferrer">
-                                                Visit Website
-                                            </a>
+                                            <span className="text-gray-600 [data-theme='dark']_&:text-gray-400">Status:</span>
+                                            <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 [data-theme='dark']_&:bg-green-900 [data-theme='dark']_&:text-green-200">
+                                                Active
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Contact Information */}
+                                {/* Fleet Summary */}
                                 <div className="bg-gray-50 p-6 rounded-lg [data-theme='dark']_&:bg-gray-700">
-                                    <h4 className="font-semibold text-gray-800 [data-theme='dark']_&:text-gray-200 mb-4">Contact Information</h4>
+                                    <h4 className="font-semibold text-gray-800 [data-theme='dark']_&:text-gray-200 mb-4">Fleet Summary</h4>
                                     <div className="space-y-3 text-sm">
-                                        <div>
-                                            <span className="text-gray-600 [data-theme='dark']_&:text-gray-400">Address:</span>
-                                            <p className="font-medium [data-theme='dark']_&:text-gray-200 mt-1">
-                                                {companyDetails.address}<br/>
-                                                {companyDetails.city}, {companyDetails.province} {companyDetails.postalCode}<br/>
-                                                {companyDetails.country}
-                                            </p>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600 [data-theme='dark']_&:text-gray-400">Total Vessels:</span>
+                                            <span className="font-medium [data-theme='dark']_&:text-gray-200">{vessels.length}</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-gray-600 [data-theme='dark']_&:text-gray-400">Phone:</span>
-                                            <span className="font-medium [data-theme='dark']_&:text-gray-200">{companyDetails.phone}</span>
+                                            <span className="text-gray-600 [data-theme='dark']_&:text-gray-400">Active Vessels:</span>
+                                            <span className="font-medium [data-theme='dark']_&:text-gray-200">
+                                                {vessels.filter(v => v.status === 'Active').length}
+                                            </span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-gray-600 [data-theme='dark']_&:text-gray-400">Email:</span>
-                                            <a href={`mailto:${companyDetails.email}`} className="font-medium text-blue-600 hover:text-blue-800 [data-theme='dark']_&:text-blue-400">
-                                                {companyDetails.email}
-                                            </a>
+                                            <span className="text-gray-600 [data-theme='dark']_&:text-gray-400">Total Crew:</span>
+                                            <span className="font-medium [data-theme='dark']_&:text-gray-200">{crews.length}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600 [data-theme='dark']_&:text-gray-400">Active Crew:</span>
+                                            <span className="font-medium [data-theme='dark']_&:text-gray-200">
+                                                {crews.filter(c => c.status === 'Active').length}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -332,107 +334,200 @@ export default function CompanyDetailDialog({ isOpen, companyId, onClose, onEdit
                         <div>
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-lg font-semibold text-gray-800 [data-theme='dark']_&:text-gray-200">Fleet Overview</h3>
-                                <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-150 text-sm">
-                                    Add Vessel
-                                </button>
+                                <div className="text-sm text-gray-500 [data-theme='dark']_&:text-gray-400">
+                                    {vesselsLoading ? 'Loading...' : `${vessels.length} vessels`}
+                                </div>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {companyDetails.vessels.map((vessel) => (
-                                    <div key={vessel.id} className="bg-gray-50 p-4 rounded-lg hover:shadow-md transition-shadow [data-theme='dark']_&:bg-gray-700">
-                                        <div className="flex justify-between items-start mb-3">
-                                            <h4 className="font-semibold text-gray-800 [data-theme='dark']_&:text-gray-200">{vessel.name}</h4>
-                                            <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(vessel.status)}`}>
-                                                {vessel.status}
-                                            </span>
+
+                            {vesselsLoading ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {[1, 2, 3].map((i) => (
+                                        <div key={i} className="bg-gray-50 p-4 rounded-lg animate-pulse [data-theme='dark']_&:bg-gray-700">
+                                            <div className="h-4 bg-gray-200 rounded mb-2 [data-theme='dark']_&:bg-gray-600"></div>
+                                            <div className="h-3 bg-gray-200 rounded mb-1 [data-theme='dark']_&:bg-gray-600"></div>
+                                            <div className="h-3 bg-gray-200 rounded w-3/4 [data-theme='dark']_&:bg-gray-600"></div>
                                         </div>
-                                        <div className="space-y-2 text-sm text-gray-600 [data-theme='dark']_&:text-gray-400">
-                                            <div>Type: {vessel.type}</div>
-                                            <div>IMO: {vessel.imo}</div>
+                                    ))}
+                                </div>
+                            ) : vessels.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {vessels.map((vessel) => (
+                                        <div key={vessel.id} className="bg-gray-50 p-4 rounded-lg hover:shadow-md transition-shadow [data-theme='dark']_&:bg-gray-700">
+                                            <div className="flex justify-between items-start mb-3">
+                                                <h4 className="font-semibold text-gray-800 [data-theme='dark']_&:text-gray-200">{vessel.name}</h4>
+                                                <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(vessel.status)}`}>
+                                                    {vessel.status}
+                                                </span>
+                                            </div>
+                                            {vessel.image && (
+                                                <div className="mb-3">
+                                                    <Image
+                                                        src={vessel.image}
+                                                        alt={vessel.name}
+                                                        className="w-full h-32 object-cover rounded-md"
+                                                    />
+                                                </div>
+                                            )}
+                                            <div className="space-y-2 text-sm text-gray-600 [data-theme='dark']_&:text-gray-400">
+                                                <div>Type: {vessel.type}</div>
+                                                <div>IMO: {vessel.imo}</div>
+                                            </div>
+                                            <div className="mt-3 flex space-x-2">
+                                                <button className="text-blue-600 hover:text-blue-900 text-sm [data-theme='dark']_&:text-blue-400">View Details</button>
+                                                <button className="text-green-600 hover:text-green-900 text-sm [data-theme='dark']_&:text-green-400">Edit</button>
+                                            </div>
                                         </div>
-                                        <div className="mt-3 flex space-x-2">
-                                            <button className="text-blue-600 hover:text-blue-900 text-sm [data-theme='dark']_&:text-blue-400">View Details</button>
-                                            <button className="text-green-600 hover:text-green-900 text-sm [data-theme='dark']_&:text-green-400">Edit</button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8">
+                                    <p className="text-gray-500 [data-theme='dark']_&:text-gray-400">No vessels found for this company.</p>
+                                </div>
+                            )}
                         </div>
                     )}
 
-                    {/* Licenses Tab */}
-                    {activeTab === 'licenses' && (
+                    {/* Crews Tab */}
+                    {activeTab === 'crews' && (
                         <div>
                             <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-lg font-semibold text-gray-800 [data-theme='dark']_&:text-gray-200">Company Licenses</h3>
-                                <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-150 text-sm">
-                                    Add License
-                                </button>
+                                <h3 className="text-lg font-semibold text-gray-800 [data-theme='dark']_&:text-gray-200">Crew Members</h3>
+                                <div className="text-sm text-gray-500 [data-theme='dark']_&:text-gray-400">
+                                    {crewsLoading ? 'Loading...' : `${crews.length} crew members`}
+                                </div>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {companyDetails.licenses.map((license) => (
-                                    <div key={license.id} className="bg-gray-50 p-4 rounded-lg [data-theme='dark']_&:bg-gray-700">
-                                        <div className="flex justify-between items-start mb-3">
-                                            <h4 className="font-semibold text-gray-800 [data-theme='dark']_&:text-gray-200">{license.name}</h4>
-                                            <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(license.status)}`}>
-                                                {license.status}
-                                            </span>
+
+                            {crewsLoading ? (
+                                <div className="space-y-4">
+                                    {[1, 2, 3].map((i) => (
+                                        <div key={i} className="bg-gray-50 p-4 rounded-lg animate-pulse [data-theme='dark']_&:bg-gray-700">
+                                            <div className="flex items-center space-x-3">
+                                                <div className="w-10 h-10 bg-gray-200 rounded-full [data-theme='dark']_&:bg-gray-600"></div>
+                                                <div className="flex-1">
+                                                    <div className="h-4 bg-gray-200 rounded mb-2 [data-theme='dark']_&:bg-gray-600"></div>
+                                                    <div className="h-3 bg-gray-200 rounded w-1/2 [data-theme='dark']_&:bg-gray-600"></div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="space-y-2 text-sm text-gray-600 [data-theme='dark']_&:text-gray-400">
-                                            <div>Issue Date: {new Date(license.issueDate).toLocaleDateString()}</div>
-                                            <div>Expiry Date: {new Date(license.expiryDate).toLocaleDateString()}</div>
+                                    ))}
+                                </div>
+                            ) : crews.length > 0 ? (
+                                <div className="space-y-4">
+                                    {crews.map((crew) => (
+                                        <div key={crew.id} className="bg-gray-50 p-4 rounded-lg hover:shadow-md transition-shadow [data-theme='dark']_&:bg-gray-700">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center space-x-3">
+                                                    <div className="flex-shrink-0">
+                                                        {crew.avatar ? (
+                                                            <Image className="h-10 w-10 rounded-full object-cover" src={crew.avatar} alt={crew.name} />
+                                                        ) : (
+                                                            <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center [data-theme='dark']_&:bg-gray-600">
+                                                                <span className="text-sm font-medium text-gray-700 [data-theme='dark']_&:text-gray-300">
+                                                                    {crew.name.split(' ').map(n => n[0]).join('')}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-semibold text-gray-800 [data-theme='dark']_&:text-gray-200">{crew.name}</h4>
+                                                        <div className="flex items-center space-x-4 text-sm text-gray-600 [data-theme='dark']_&:text-gray-400">
+                                                            <span>{crew.role}</span>
+                                                            <span>•</span>
+                                                            <span>{crew.vessel}</span>
+                                                            <span>•</span>
+                                                            <span>{crew.email}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(crew.status)}`}>
+                                                    {crew.status}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div className="mt-3 flex space-x-2">
-                                            <button className="text-blue-600 hover:text-blue-900 text-sm [data-theme='dark']_&:text-blue-400">View</button>
-                                            <button className="text-green-600 hover:text-green-900 text-sm [data-theme='dark']_&:text-green-400">Renew</button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8">
+                                    <p className="text-gray-500 [data-theme='dark']_&:text-gray-400">No crew members found for this company.</p>
+                                </div>
+                            )}
                         </div>
                     )}
 
-                    {/* Financial Tab */}
-                    {activeTab === 'financial' && (
+                    {/* Statistics Tab */}
+                    {activeTab === 'statistics' && (
                         <div className="space-y-6">
-                            <h3 className="text-lg font-semibold text-gray-800 [data-theme='dark']_&:text-gray-200">Financial Overview</h3>
+                            <h3 className="text-lg font-semibold text-gray-800 [data-theme='dark']_&:text-gray-200">Company Statistics</h3>
 
+                            {/* Performance Metrics */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <div className="bg-green-50 p-6 rounded-lg [data-theme='dark']_&:bg-green-900">
-                                    <h4 className="text-sm font-medium text-green-600 [data-theme='dark']_&:text-green-300">Annual Revenue</h4>
+                                    <h4 className="text-sm font-medium text-green-600 [data-theme='dark']_&:text-green-300">Fleet Utilization</h4>
                                     <p className="text-2xl font-bold text-green-900 [data-theme='dark']_&:text-green-100">
-                                        {formatCurrency(companyDetails.financialInfo.revenue)}
+                                        {vessels.length > 0 ? Math.round((vessels.filter(v => v.status === 'Active').length / vessels.length) * 100) : 0}%
                                     </p>
-                                    <p className="text-sm text-green-600 [data-theme='dark']_&:text-green-300">2024 Performance</p>
+                                    <p className="text-sm text-green-600 [data-theme='dark']_&:text-green-300">Active Vessels</p>
                                 </div>
                                 <div className="bg-blue-50 p-6 rounded-lg [data-theme='dark']_&:bg-blue-900">
-                                    <h4 className="text-sm font-medium text-blue-600 [data-theme='dark']_&:text-blue-300">Total Assets</h4>
+                                    <h4 className="text-sm font-medium text-blue-600 [data-theme='dark']_&:text-blue-300">Crew Efficiency</h4>
                                     <p className="text-2xl font-bold text-blue-900 [data-theme='dark']_&:text-blue-100">
-                                        {formatCurrency(companyDetails.financialInfo.assets)}
+                                        {crews.length > 0 ? Math.round((crews.filter(c => c.status === 'Active').length / crews.length) * 100) : 0}%
                                     </p>
-                                    <p className="text-sm text-blue-600 [data-theme='dark']_&:text-blue-300">Market Value</p>
+                                    <p className="text-sm text-blue-600 [data-theme='dark']_&:text-blue-300">Active Crew</p>
                                 </div>
                                 <div className="bg-purple-50 p-6 rounded-lg [data-theme='dark']_&:bg-purple-900">
-                                    <h4 className="text-sm font-medium text-purple-600 [data-theme='dark']_&:text-purple-300">Growth Rate</h4>
+                                    <h4 className="text-sm font-medium text-purple-600 [data-theme='dark']_&:text-purple-300">Avg Crew per Vessel</h4>
                                     <p className="text-2xl font-bold text-purple-900 [data-theme='dark']_&:text-purple-100">
-                                        +{companyDetails.financialInfo.yearlyGrowth}%
+                                        {vessels.length > 0 ? Math.round(crews.length / vessels.length) : 0}
                                     </p>
-                                    <p className="text-sm text-purple-600 [data-theme='dark']_&:text-purple-300">Year over Year</p>
+                                    <p className="text-sm text-purple-600 [data-theme='dark']_&:text-purple-300">Crew Members</p>
                                 </div>
                                 <div className="bg-orange-50 p-6 rounded-lg [data-theme='dark']_&:bg-orange-900">
-                                    <h4 className="text-sm font-medium text-orange-600 [data-theme='dark']_&:text-orange-300">Credit Rating</h4>
+                                    <h4 className="text-sm font-medium text-orange-600 [data-theme='dark']_&:text-orange-300">Fleet Growth</h4>
                                     <p className="text-2xl font-bold text-orange-900 [data-theme='dark']_&:text-orange-100">
-                                        {companyDetails.financialInfo.rating}
+                                        +{vessels.length}
                                     </p>
-                                    <p className="text-sm text-orange-600 [data-theme='dark']_&:text-orange-300">Industry Standard</p>
+                                    <p className="text-sm text-orange-600 [data-theme='dark']_&:text-orange-300">Total Vessels</p>
                                 </div>
                             </div>
 
+                            {/* Additional Statistics */}
                             <div className="bg-gray-50 p-6 rounded-lg [data-theme='dark']_&:bg-gray-700">
-                                <h4 className="font-semibold text-gray-800 [data-theme='dark']_&:text-gray-200 mb-4">Financial Health</h4>
-                                <p className="text-sm text-gray-600 [data-theme='dark']_&:text-gray-400">
-                                    The company demonstrates strong financial performance with consistent growth and excellent credit rating.
-                                    Fleet expansion and operational efficiency contribute to sustained profitability.
-                                </p>
+                                <h4 className="font-semibold text-gray-800 [data-theme='dark']_&:text-gray-200 mb-4">Company Overview</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <h5 className="font-medium text-gray-700 [data-theme='dark']_&:text-gray-300 mb-2">Fleet Composition</h5>
+                                        <div className="space-y-2">
+                                            {Object.entries(
+                                                vessels.reduce((acc, vessel) => {
+                                                    acc[vessel.type] = (acc[vessel.type] || 0) + 1;
+                                                    return acc;
+                                                }, {} as Record<string, number>)
+                                            ).map(([type, count]) => (
+                                                <div key={type} className="flex justify-between text-sm">
+                                                    <span className="text-gray-600 [data-theme='dark']_&:text-gray-400">{type}:</span>
+                                                    <span className="font-medium [data-theme='dark']_&:text-gray-200">{count}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h5 className="font-medium text-gray-700 [data-theme='dark']_&:text-gray-300 mb-2">Crew Distribution</h5>
+                                        <div className="space-y-2">
+                                            {Object.entries(
+                                                crews.reduce((acc, crew) => {
+                                                    acc[crew.role] = (acc[crew.role] || 0) + 1;
+                                                    return acc;
+                                                }, {} as Record<string, number>)
+                                            ).slice(0, 5).map(([role, count]) => (
+                                                <div key={role} className="flex justify-between text-sm">
+                                                    <span className="text-gray-600 [data-theme='dark']_&:text-gray-400">{role}:</span>
+                                                    <span className="font-medium [data-theme='dark']_&:text-gray-200">{count}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
