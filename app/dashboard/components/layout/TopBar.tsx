@@ -66,7 +66,7 @@ export default function TopBar({ menuItems, activeMenuItem }: TopBarProps) {
     };
 
     return (
-        <header className="bg-white shadow-sm border-b px-6 py-4 [data-theme='dark']_&:bg-gray-900 [data-theme='dark']_&:border-gray-700 transition-colors duration-300">
+        <header className="bg-white shadow-sm border-b border-gray-100 px-6 py-4 [data-theme='dark']_&:bg-gray-900 [data-theme='dark']_&:border-gray-700 transition-colors duration-300">
             <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                     <h2 className="text-xl font-semibold text-gray-800 [data-theme='dark']_&:text-white">
