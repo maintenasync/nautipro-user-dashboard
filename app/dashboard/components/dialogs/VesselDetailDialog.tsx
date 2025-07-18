@@ -4,7 +4,6 @@
 
 import { useState, useEffect } from 'react';
 import { useAllVessels, useCrewsByVessel, useCompanies } from '@/app/hooks/useApiQuery';
-import Image from "next/image";
 
 interface VesselDetailDialogProps {
     isOpen: boolean;
@@ -283,7 +282,7 @@ export default function VesselDetailDialog({
                                     <h4 className="font-semibold text-gray-800 [data-theme='dark']_&:text-gray-200 mb-3">Vessel Image</h4>
                                     <div className="w-full h-48 bg-gray-200 rounded-lg overflow-hidden [data-theme='dark']_&:bg-gray-600">
                                         {vessel.image ? (
-                                            <Image
+                                            <img
                                                 src={vessel.image}
                                                 alt={vessel.name}
                                                 className="w-full h-full object-cover"
@@ -393,7 +392,7 @@ export default function VesselDetailDialog({
                                                 <div className="flex items-center space-x-3">
                                                     <div className="flex-shrink-0">
                                                         {crew.avatar ? (
-                                                            <Image className="h-10 w-10 rounded-full object-cover" src={crew.avatar} alt={crew.name} />
+                                                            <img className="h-10 w-10 rounded-full object-cover" src={crew.avatar} alt={crew.name} />
                                                         ) : (
                                                             <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center [data-theme='dark']_&:bg-gray-600">
                                                                 <span className="text-sm font-medium text-gray-700 [data-theme='dark']_&:text-gray-300">

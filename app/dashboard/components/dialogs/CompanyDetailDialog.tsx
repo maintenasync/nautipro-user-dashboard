@@ -4,7 +4,6 @@
 
 import { useState, useEffect } from 'react';
 import { useCompany, useVesselsByCompany, useCrewsByCompany } from '@/app/hooks/useApiQuery';
-import Image from "next/image";
 
 interface CompanyDetailDialogProps {
     isOpen: boolean;
@@ -268,7 +267,7 @@ export default function CompanyDetailDialog({
                                     <p className="text-2xl font-bold text-orange-900 [data-theme='dark']_&:text-orange-100">
                                         {company.created}
                                     </p>
-                                    <p className="text-sm text-orange-600 [data-theme='dark']_&:text-orange-300">Company Founded</p>
+                                    <p className="text-sm text-orange-600 [data-theme='dark']_&:text-orange-300">Company Added</p>
                                 </div>
                             </div>
 
@@ -361,7 +360,7 @@ export default function CompanyDetailDialog({
                                             </div>
                                             {vessel.image && (
                                                 <div className="mb-3">
-                                                    <Image
+                                                    <img
                                                         src={vessel.image}
                                                         alt={vessel.name}
                                                         className="w-full h-32 object-cover rounded-md"
@@ -419,7 +418,7 @@ export default function CompanyDetailDialog({
                                                 <div className="flex items-center space-x-3">
                                                     <div className="flex-shrink-0">
                                                         {crew.avatar ? (
-                                                            <Image className="h-10 w-10 rounded-full object-cover" src={crew.avatar} alt={crew.name} />
+                                                            <img className="h-10 w-10 rounded-full object-cover" src={crew.avatar} alt={crew.name} />
                                                         ) : (
                                                             <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center [data-theme='dark']_&:bg-gray-600">
                                                                 <span className="text-sm font-medium text-gray-700 [data-theme='dark']_&:text-gray-300">

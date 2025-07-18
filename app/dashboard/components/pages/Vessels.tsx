@@ -6,7 +6,6 @@ import { useState } from 'react';
 import CreateVesselDialog from '../dialogs/CreateVesselDialog';
 import VesselDetailDialog from '../dialogs/VesselDetailDialog';
 import { useAllVessels} from '@/app/hooks/useApiQuery';
-import Image from "next/image";
 
 export default function Vessels() {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -217,7 +216,7 @@ export default function Vessels() {
                                         <div className="flex items-center">
                                             <div className="flex-shrink-0 h-10 w-10">
                                                 {vessel.image ? (
-                                                    <Image className="h-10 w-10 rounded-lg object-cover" src={vessel.image} alt={vessel.name} />
+                                                    <img className="h-10 w-10 rounded-lg object-cover" src={vessel.image} alt={vessel.name} />
                                                 ) : (
                                                     <div className="h-10 w-10 rounded-lg bg-gray-300 flex items-center justify-center [data-theme='dark']_&:bg-gray-600">
                                                         <svg className="h-6 w-6 text-gray-500 [data-theme='dark']_&:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -4,7 +4,6 @@ import {BellIcon, UserIcon } from '../icons/Icons';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useSafeTheme } from '@/app/hooks/useSafeTheme';
 import { useState } from 'react';
-import Image from "next/image";
 
 interface MenuItem {
     id: string;
@@ -174,7 +173,7 @@ export default function TopBar({ menuItems, activeMenuItem }: TopBarProps) {
                     <div className="relative group">
                         <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 [data-theme='dark']_&:hover:bg-gray-700">
                             {state.user?.avatar ? (
-                                <Image
+                                <img
                                     src={state.user.avatar}
                                     alt="Profile"
                                     className="w-8 h-8 rounded-full"

@@ -1,6 +1,6 @@
 // app/services/apiService.ts
 import authService from './authService';
-import type { ApiResponse, Company, Vessel, CrewMember } from '@/app/types/api';
+import type { ApiResponse, Company, Vessel, CrewMember, License } from '@/app/types/api';
 
 const BASE_URL = 'https://auth.nautiproconnect.com/api/v1/web';
 
@@ -74,6 +74,11 @@ class ApiService {
 
     async getCrewsByCompany(companyId: string): Promise<ApiResponse<CrewMember[]>> {
         return this.request<CrewMember[]>(`/get-vessels-member-maintena-by-company/${companyId}`);
+    }
+
+    // Licenses API
+    async getLicenses(): Promise<ApiResponse<License[]>> {
+        return this.request<License[]>('/get-license-maintena');
     }
 
     // Utility method to get all crews (if needed for crew management page)

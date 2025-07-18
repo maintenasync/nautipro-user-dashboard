@@ -100,6 +100,17 @@ export interface CrewMember {
     user_role: UserRole;
 }
 
+// License Interfaces
+export interface License {
+    license_code: string;
+    valid_until: string;
+    company_id: string;
+    vessel_id: string;
+    company: Company;
+    vessel: Vessel;
+    role: UserRole;
+}
+
 // For UI Components (transformed data)
 export interface CompanyUI {
     id: string;
@@ -130,4 +141,18 @@ export interface CrewMemberUI {
     startDate: string;
     status: string;
     avatar?: string;
+}
+
+export interface LicenseUI {
+    id: string;
+    license_code: string;
+    company_name: string;
+    vessel_name: string;
+    vessel_imo: string;
+    role_name: string;
+    valid_until: string;
+    status: string;
+    days_remaining: number;
+    vessel_image?: string;
+    company_location: string;
 }

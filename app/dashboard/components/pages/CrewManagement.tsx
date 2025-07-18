@@ -293,7 +293,7 @@ export default function CrewManagement() {
                                         <div className="flex items-center">
                                             <div className="flex-shrink-0 h-10 w-10">
                                                 {crew.avatar ? (
-                                                    <Image className="h-10 w-10 rounded-full object-cover" src={crew.avatar} alt={crew.name} />
+                                                    <img className="h-10 w-10 rounded-full object-cover" src={crew.avatar} alt={crew.name} />
                                                 ) : (
                                                     <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center [data-theme='dark']_&:bg-gray-600">
                               <span className="text-sm font-medium text-gray-700 [data-theme='dark']_&:text-gray-300">

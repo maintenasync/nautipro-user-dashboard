@@ -1,7 +1,34 @@
 // app/hooks/useApiQuery.ts
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiService from '@/app/services/apiService';
-import type { Company, Vessel, CrewMember, CompanyUI, VesselUI, CrewMemberUI } from '@/app/types/api';
+import type { Company, Vessel, CrewMember, License, CompanyUI, VesselUI, CrewMemberUI, LicenseUI } from '@/app/types/api';
+
+const transformLicenseForUI = (license: License): LicenseUI => {
+    const validUntil = new Date(parseInt(license.valid_until));
+    const now = new Date();
+    const daysRemaining = Math.ceil((validUntil.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    let status = 'Valid';
+    if (daysRemaining < 0) {
+        status = 'Expired';
+    } else if (daysRemaining <= 30) {
+        status = 'Expiring Soon';
+    }
+
+    return {
+        id: license.license_code,
+        license_code: license.license_code,
+        company_name: license.company.name,
+        vessel_name: license.vessel.name.trim(),
+        vessel_imo: license.vessel.imo,
+        role_name: license.role.name,
+        valid_until: validUntil.toLocaleDateString('id-ID'),
+        status,
+        days_remaining: daysRemaining,
+        vessel_image: license.vessel.image,
+        company_location: `${license.company.city}, ${license.company.province}`,
+    };
+};
 
 // Helper functions to transform data for UI
 const transformCompanyForUI = (company: Company): CompanyUI => ({
@@ -191,6 +218,45 @@ export const useFilteredCrews = (filters: {
     return {
         ...query,
         data: filteredCrews,
+    };
+};
+
+// Licenses Hooks
+export const useLicenses = () => {
+    return useQuery({
+        queryKey: ['licenses'],
+        queryFn: async () => {
+            const response = await apiService.getLicenses();
+            return response.data.map(transformLicenseForUI);
+        },
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+};
+
+// Filtering hook for licenses
+export const useFilteredLicenses = (filters: {
+    company?: string;
+    vessel?: string;
+    status?: string;
+    search?: string;
+}) => {
+    const { data: licenses, ...query } = useLicenses();
+
+    const filteredLicenses = licenses?.filter(license => {
+        const matchesCompany = !filters.company || filters.company === 'All Companies' || license.company_name === filters.company;
+        const matchesVessel = !filters.vessel || filters.vessel === 'All Vessels' || license.vessel_name === filters.vessel;
+        const matchesStatus = !filters.status || filters.status === 'All Status' || license.status === filters.status;
+        const matchesSearch = !filters.search ||
+            license.license_code.toLowerCase().includes(filters.search.toLowerCase()) ||
+            license.company_name.toLowerCase().includes(filters.search.toLowerCase()) ||
+            license.vessel_name.toLowerCase().includes(filters.search.toLowerCase());
+
+        return matchesCompany && matchesVessel && matchesStatus && matchesSearch;
+    }) || [];
+
+    return {
+        ...query,
+        data: filteredLicenses,
     };
 };
 
