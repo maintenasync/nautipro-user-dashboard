@@ -1,7 +1,34 @@
 // app/hooks/useApiQuery.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiService from '@/app/services/apiService';
-import type { Company, Vessel, CrewMember, License, CompanyUI, VesselUI, CrewMemberUI, LicenseUI } from '@/app/types/api';
+import type { Company, Vessel, CrewMember, License, Invitation, CompanyUI, VesselUI, CrewMemberUI, LicenseUI, InvitationUI } from '@/app/types/api';
+
+const transformInvitationForUI = (invitation: Invitation, vessels: VesselUI[] = []): InvitationUI => {
+    const createdAt = new Date(parseInt(invitation.created_at));
+    const expiredAt = new Date(parseInt(invitation.expired_at));
+    const now = new Date();
+    const daysRemaining = Math.ceil((expiredAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const isExpired = daysRemaining < 0;
+
+    // Find vessel name from vessels list
+    const vessel = vessels.find(v => v.id === invitation.vessel_id);
+    const vesselName = vessel?.name || 'Unknown Vessel';
+
+    return {
+        id: invitation.id,
+        company_name: invitation.company.name,
+        company_location: `${invitation.company.city}, ${invitation.company.province}`,
+        vessel_name: vesselName,
+        role_name: invitation.user_role.name,
+        role_description: invitation.user_role.description,
+        email: invitation.email,
+        status: invitation.status,
+        created_date: createdAt.toLocaleDateString('id-ID'),
+        expired_date: expiredAt.toLocaleDateString('id-ID'),
+        days_remaining: daysRemaining,
+        is_expired: isExpired,
+    };
+};
 
 const transformLicenseForUI = (license: License): LicenseUI => {
     const validUntil = new Date(parseInt(license.valid_until));
@@ -257,6 +284,71 @@ export const useFilteredLicenses = (filters: {
     return {
         ...query,
         data: filteredLicenses,
+    };
+};
+
+// Invitations Hooks
+export const useInvitations = () => {
+    const { data: vessels = [] } = useAllVessels();
+
+    return useQuery({
+        queryKey: ['invitations'],
+        queryFn: async () => {
+            const response = await apiService.getInvitations();
+            return response.data.map(invitation => transformInvitationForUI(invitation, vessels));
+        },
+        enabled: vessels.length > 0,
+        staleTime: 2 * 60 * 1000, // 2 minutes
+    });
+};
+
+// Invitation actions hooks
+export const useAcceptInvitation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (invitationId: number) => apiService.acceptInvitation(invitationId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['invitations'] });
+            queryClient.invalidateQueries({ queryKey: ['crews'] });
+        },
+    });
+};
+
+export const useRejectInvitation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (invitationId: number) => apiService.rejectInvitation(invitationId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['invitations'] });
+        },
+    });
+};
+
+// Filtering hook for invitations
+export const useFilteredInvitations = (filters: {
+    company?: string;
+    status?: string;
+    search?: string;
+}) => {
+    const { data: invitations, ...query } = useInvitations();
+
+    const filteredInvitations = invitations?.filter(invitation => {
+        const matchesCompany = !filters.company || filters.company === 'All Companies' || invitation.company_name === filters.company;
+        const matchesStatus = !filters.status || filters.status === 'All Status' || invitation.status === filters.status;
+        const matchesSearch = !filters.search ||
+            invitation.company_name.toLowerCase().includes(filters.search.toLowerCase()) ||
+            invitation.vessel_name.toLowerCase().includes(filters.search.toLowerCase()) ||
+            invitation.role_name.toLowerCase().includes(filters.search.toLowerCase()) ||
+            invitation.email.toLowerCase().includes(filters.search.toLowerCase());
+
+        return matchesCompany && matchesStatus && matchesSearch;
+    }) || [];
+
+    return {
+        ...query,
+        data: filteredInvitations,
     };
 };
 

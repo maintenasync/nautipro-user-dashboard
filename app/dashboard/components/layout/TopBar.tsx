@@ -162,12 +162,12 @@ export default function TopBar({ menuItems, activeMenuItem }: TopBarProps) {
                     )}
 
                     {/* Notifications */}
-                    <button className="p-2 rounded-lg hover:bg-gray-100 relative [data-theme='dark']_&:hover:bg-gray-700">
-                        <BellIcon />
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                            3
-                        </span>
-                    </button>
+                    {/*<button className="p-2 rounded-lg hover:bg-gray-100 relative [data-theme='dark']_&:hover:bg-gray-700">*/}
+                    {/*    <BellIcon />*/}
+                    {/*    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">*/}
+                    {/*        3*/}
+                    {/*    </span>*/}
+                    {/*</button>*/}
 
                     {/* Profile Dropdown */}
                     <div className="relative group">
@@ -195,12 +195,12 @@ export default function TopBar({ menuItems, activeMenuItem }: TopBarProps) {
                         </button>
 
                         {/* Dropdown Menu */}
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 [data-theme='dark']_&:bg-gray-800 border border-gray-200 [data-theme='dark']_&:border-gray-600">
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md border-gray-100 shadow-lg py-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 [data-theme='dark']_&:bg-gray-800 border border-gray-200 [data-theme='dark']_&:border-gray-600">
                             <div className="px-4 py-2 border-b [data-theme='dark']_&:border-gray-600">
                                 <p className="text-sm font-medium text-gray-900 [data-theme='dark']_&:text-white">{state.user?.name}</p>
                                 <p className="text-sm text-gray-500 [data-theme='dark']_&:text-gray-400">{state.user?.email}</p>
                             </div>
-                            <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 [data-theme='dark']_&:text-gray-200 [data-theme='dark']_&:hover:bg-gray-700">
+                            <a href="#" className="block px-4 py-2 border-gray-100 text-sm text-gray-700 hover:bg-gray-100 [data-theme='dark']_&:text-gray-200 [data-theme='dark']_&:hover:bg-gray-700">
                                 Profile Settings
                             </a>
                             <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 [data-theme='dark']_&:text-gray-200 [data-theme='dark']_&:hover:bg-gray-700">
@@ -209,7 +209,7 @@ export default function TopBar({ menuItems, activeMenuItem }: TopBarProps) {
                             <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 [data-theme='dark']_&:text-gray-200 [data-theme='dark']_&:hover:bg-gray-700">
                                 Help & Support
                             </a>
-                            <div className="border-t [data-theme='dark']_&:border-gray-600">
+                            <div className="border-t [data-theme='dark']_&:border-gray-100">
                                 <button
                                     onClick={handleLogout}
                                     className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 [data-theme='dark']_&:text-red-400 [data-theme='dark']_&:hover:bg-gray-700"

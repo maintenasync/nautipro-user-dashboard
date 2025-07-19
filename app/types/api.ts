@@ -100,6 +100,22 @@ export interface CrewMember {
     user_role: UserRole;
 }
 
+// Invitation Interfaces
+export interface Invitation {
+    id: number;
+    company_id: string;
+    vessel_id: string;
+    user_id: string;
+    email: string;
+    user_role_id: number;
+    status: 'pending' | 'accept' | 'reject';
+    expired_at: string;
+    created_at: string;
+    updated_at: string;
+    company: Company;
+    user_role: UserRole;
+}
+
 // License Interfaces
 export interface License {
     license_code: string;
@@ -155,4 +171,19 @@ export interface LicenseUI {
     days_remaining: number;
     vessel_image?: string;
     company_location: string;
+}
+
+export interface InvitationUI {
+    id: number;
+    company_name: string;
+    company_location: string;
+    vessel_name: string;
+    role_name: string;
+    role_description: string;
+    email: string;
+    status: 'pending' | 'accept' | 'reject';
+    created_date: string;
+    expired_date: string;
+    days_remaining: number;
+    is_expired: boolean;
 }

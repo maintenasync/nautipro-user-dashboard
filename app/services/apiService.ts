@@ -1,6 +1,6 @@
 // app/services/apiService.ts
 import authService from './authService';
-import type { ApiResponse, Company, Vessel, CrewMember, License } from '@/app/types/api';
+import type { ApiResponse, Company, Vessel, CrewMember, License, Invitation } from '@/app/types/api';
 
 const BASE_URL = 'https://auth.nautiproconnect.com/api/v1/web';
 
@@ -79,6 +79,19 @@ class ApiService {
     // Licenses API
     async getLicenses(): Promise<ApiResponse<License[]>> {
         return this.request<License[]>('/get-license-maintena');
+    }
+
+    // Invitations API
+    async getInvitations(): Promise<ApiResponse<Invitation[]>> {
+        return this.request<Invitation[]>('/get-invitations-vessel-member-maintena');
+    }
+
+    async acceptInvitation(invitationId: number): Promise<ApiResponse<any>> {
+        return this.request<any>(`/accept-invitation-vessel-member-maintena/${invitationId}`);
+    }
+
+    async rejectInvitation(invitationId: number): Promise<ApiResponse<any>> {
+        return this.request<any>(`/reject-invitation-vessel-member-maintena/${invitationId}`);
     }
 
     // Utility method to get all crews (if needed for crew management page)

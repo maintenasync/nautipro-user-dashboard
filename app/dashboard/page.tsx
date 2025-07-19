@@ -15,6 +15,7 @@ import CrewManagement from './components/pages/CrewManagement';
 import Companies from './components/pages/Companies';
 import Vessels from './components/pages/Vessels';
 import License from './components/pages/License';
+import Invitations from './components/pages/Invitations';
 import NotificationSetting from './components/pages/NotificationSetting';
 import Settings from './components/pages/Settings';
 import CreateCompany from './components/pages/CreateCompany';
@@ -28,6 +29,7 @@ import {
     BuildingIcon,
     ShipIcon,
     LicenseIcon,
+    InvitationIcon,
     NotificationIcon,
     SettingsIcon
 } from './components/icons/Icons';
@@ -39,6 +41,7 @@ const menuItems = [
     {id: 'companies', label: 'Companies', icon: BuildingIcon, component: Companies},
     {id: 'vessels', label: 'Vessels', icon: ShipIcon, component: Vessels},
     {id: 'license', label: 'License', icon: LicenseIcon, component: License},
+    {id: 'invitations', label: 'Invitations', icon: InvitationIcon, component: Invitations},
     {id: 'notification', label: 'Notification Setting', icon: NotificationIcon, component: NotificationSetting},
     {id: 'settings', label: 'Settings', icon: SettingsIcon, component: Settings},
 ];
