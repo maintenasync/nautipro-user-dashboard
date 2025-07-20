@@ -7,7 +7,7 @@ interface MenuItem {
     id: string;
     label: string;
     icon: React.ComponentType<{ className?: string }>;
-    component: React.ComponentType<unknown>;
+    component: React.ComponentType<any>;
 }
 
 interface SidebarProps {

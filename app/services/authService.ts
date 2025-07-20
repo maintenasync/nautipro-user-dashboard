@@ -14,7 +14,7 @@ class AuthService {
         };
     }
 
-    private getAuthHeaders() {
+     getAuthHeaders() {
         const token = this.getToken();
         return {
             'Content-Type': 'application/json',

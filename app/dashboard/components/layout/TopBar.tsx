@@ -15,9 +15,11 @@ interface MenuItem {
 interface TopBarProps {
     menuItems: MenuItem[];
     activeMenuItem: string;
+    sidebarOpen?: boolean;
+    setSidebarOpen?: (open: boolean) => void;
 }
 
-export default function TopBar({ menuItems, activeMenuItem }: TopBarProps) {
+export default function TopBar({ menuItems, activeMenuItem , sidebarOpen, setSidebarOpen}: TopBarProps) {
     const { state, logout } = useAuth();
     const { theme, setTheme, mounted } = useSafeTheme();
     const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
