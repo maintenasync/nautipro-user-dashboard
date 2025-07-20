@@ -16,14 +16,18 @@ type AuthAction =
     | { type: 'REGISTER_FAILURE' }
     | { type: 'LOGOUT' }
     | { type: 'SET_USER'; payload: { user: User; token: string } }
-    | { type: 'INITIALIZE_AUTH_COMPLETE' };
+    | { type: 'INITIALIZE_AUTH_START' }
+    | { type: 'INITIALIZE_AUTH_SUCCESS'; payload: { user: User; token: string } }
+    | { type: 'INITIALIZE_AUTH_FAILURE' }
+    | { type: 'INITIALIZE_AUTH_COMPLETE' }
+    | { type: 'REFRESH_USER_DATA'; payload: { user: User } };
 
 // Initial state
 const initialState: AuthState = {
     user: null,
     token: null,
     isAuthenticated: false,
-    isLoading: false,
+    isLoading: true, // Start with loading true untuk initialization
     isInitialized: false,
 };
 
@@ -36,7 +40,14 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
                 ...state,
                 isLoading: true,
             };
+        case 'INITIALIZE_AUTH_START':
+            return {
+                ...state,
+                isLoading: true,
+                isInitialized: false,
+            };
         case 'LOGIN_SUCCESS':
+        case 'INITIALIZE_AUTH_SUCCESS':
             return {
                 ...state,
                 user: action.payload.user,
@@ -52,14 +63,19 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
             };
         case 'LOGIN_FAILURE':
         case 'REGISTER_FAILURE':
+        case 'INITIALIZE_AUTH_FAILURE':
             return {
                 ...state,
+                user: null,
+                token: null,
+                isAuthenticated: false,
                 isLoading: false,
                 isInitialized: true,
             };
         case 'LOGOUT':
             return {
                 ...initialState,
+                isLoading: false,
                 isInitialized: true,
             };
         case 'SET_USER':
@@ -70,9 +86,15 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
                 isAuthenticated: true,
                 isInitialized: true,
             };
-        case 'INITIALIZE_AUTH_COMPLETE': // <-- Case baru
+        case 'REFRESH_USER_DATA':
             return {
                 ...state,
+                user: action.payload.user,
+            };
+        case 'INITIALIZE_AUTH_COMPLETE':
+            return {
+                ...state,
+                isLoading: false,
                 isInitialized: true,
             };
         default:
@@ -86,6 +108,7 @@ interface AuthContextType {
     login: (credentials: LoginRequest) => Promise<boolean>;
     register: (userData: RegisterRequest) => Promise<boolean>;
     logout: () => void;
+    refreshUserData: () => Promise<boolean>;
 }
 
 // Create context
@@ -95,32 +118,114 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [state, dispatch] = useReducer(authReducer, initialState);
 
+    // Function untuk fetch user data dari API
+    const fetchUserData = async (token: string): Promise<User | null> => {
+        try {
+            const apiKey = process.env.NEXT_PUBLIC_API_KEY || '12345678';
+            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://auth.nautiproconnect.com/api/v1/web';
+
+            const response = await fetch(`${baseUrl}/user`, {
+                method: 'GET',
+                headers: {
+                    'x-api-key': apiKey || '',
+                    'authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch user data: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (result.code === 200 && result.data) {
+                return {
+                    id: result.data.id,
+                    name: result.data.name,
+                    username: result.data.username,
+                    email: result.data.email,
+                    role: result.data.role,
+                    avatar: result.data.avatar_link || '',
+                    license: result.data.license || null,
+                };
+            }
+
+            throw new Error('Invalid response format');
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+            return null;
+        }
+    };
+
+    // Function untuk refresh user data (bisa dipanggil dari komponen lain)
+    const refreshUserData = async (): Promise<boolean> => {
+        const token = authService.getToken();
+        if (!token) return false;
+
+        try {
+            const userData = await fetchUserData(token);
+            if (userData) {
+                dispatch({
+                    type: 'REFRESH_USER_DATA',
+                    payload: { user: userData }
+                });
+                // Update localStorage dengan data terbaru
+                localStorage.setItem('user_data', JSON.stringify({
+                    ...userData,
+                    token
+                }));
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error refreshing user data:', error);
+            return false;
+        }
+    };
+
     // Check for existing authentication on mount
     useEffect(() => {
-        const token = authService.getToken();
-        const userData = authService.getUserData();
+        const initializeAuth = async () => {
+            dispatch({ type: 'INITIALIZE_AUTH_START' });
 
-        if (token && userData) {
-            dispatch({
-                type: 'SET_USER',
-                payload: {
-                    user: {
-                        id: userData.id,
-                        name: userData.name,
-                        username: userData.username,
-                        email: userData.email,
-                        role: userData.role,
-                        avatar: userData.avatar,
-                        license: userData.license,
-                    },
-                    token,
-                },
-            });
-        }else {
-            // Penting: Ini dijalankan jika tidak ada token,
-            // menandakan bahwa proses inisialisasi dari localStorage sudah selesai
-            dispatch({ type: 'INITIALIZE_AUTH_COMPLETE' });
-        }
+            const token = authService.getToken();
+
+            if (token) {
+                // Jika ada token, fetch user data dari API (bukan dari localStorage)
+                try {
+                    const userData = await fetchUserData(token);
+
+                    if (userData) {
+                        // Update localStorage dengan data terbaru
+                        localStorage.setItem('user_data', JSON.stringify({
+                            ...userData,
+                            token
+                        }));
+
+                        dispatch({
+                            type: 'INITIALIZE_AUTH_SUCCESS',
+                            payload: {
+                                user: userData,
+                                token,
+                            },
+                        });
+                    } else {
+                        // Jika gagal fetch user data, kemungkinan token invalid
+                        authService.logout(); // Clear localStorage
+                        dispatch({ type: 'INITIALIZE_AUTH_FAILURE' });
+                    }
+                } catch (error) {
+                    console.error('Auth initialization error:', error);
+                    authService.logout(); // Clear localStorage
+                    dispatch({ type: 'INITIALIZE_AUTH_FAILURE' });
+                }
+            } else {
+                // Tidak ada token, langsung complete initialization
+                dispatch({ type: 'INITIALIZE_AUTH_COMPLETE' });
+            }
+        };
+
+        initializeAuth();
     }, []);
 
     const login = async (credentials: LoginRequest): Promise<boolean> => {
@@ -130,18 +235,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const response = await authService.login(credentials);
 
             if (response.code === 200) {
+                const userData: User = {
+                    id: response.data.id,
+                    name: response.data.name,
+                    username: response.data.username,
+                    email: response.data.email,
+                    role: response.data.role,
+                    avatar: response.data.avatar,
+                    license: response.data.license,
+                };
+
                 dispatch({
                     type: 'LOGIN_SUCCESS',
                     payload: {
-                        user: {
-                            id: response.data.id,
-                            name: response.data.name,
-                            username: response.data.username,
-                            email: response.data.email,
-                            role: response.data.role,
-                            avatar: response.data.avatar,
-                            license: response.data.license,
-                        },
+                        user: userData,
                         token: response.data.token,
                     },
                 });
@@ -150,7 +257,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 dispatch({ type: 'LOGIN_FAILURE' });
                 return false;
             }
-        } catch (error : unknown) {
+        } catch (error: unknown) {
             dispatch({ type: 'LOGIN_FAILURE' });
             console.error('Login error:', error);
             return false;
@@ -183,7 +290,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ state, login, register, logout }}>
+        <AuthContext.Provider value={{ state, login, register, logout, refreshUserData }}>
             {children}
         </AuthContext.Provider>
     );

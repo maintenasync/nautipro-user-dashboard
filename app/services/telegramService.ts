@@ -24,13 +24,16 @@ interface VerifyTokenResponse {
     };
 }
 
+const BASE_URL = 'https://auth.nautiproconnect.com/api/v1/web';
+const API_KEY = '12345678'
+
 class TelegramService {
     private baseUrl: string;
     private apiKey: string;
 
     constructor() {
-        this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-        this.apiKey = process.env.NEXT_PUBLIC_API_KEY || '';
+        this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || BASE_URL;
+        this.apiKey = process.env.NEXT_PUBLIC_API_KEY || API_KEY;
 
         if (!this.baseUrl || !this.apiKey) {
             console.warn('Telegram API configuration is missing. Please set NEXT_PUBLIC_API_BASE_URL and NEXT_PUBLIC_API_KEY');
