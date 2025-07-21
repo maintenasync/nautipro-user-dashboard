@@ -1,17 +1,20 @@
-// app/dashboard/components/dialogs/CreateVesselDialog.tsx
+// app/dashboard/components/dialogs/EditVesselDialog.tsx
 
 'use client';
 
-import { useState, useRef } from 'react';
-import { useCreateVessel, useUpdateVesselImage, useVesselTypes, useCompanies } from '@/app/hooks/useApiQuery';
+import { useState, useRef, useEffect } from 'react';
+import { useUpdateVessel, useUpdateVesselImage, useVesselTypes, useCompanies } from '@/app/hooks/useApiQuery';
+import type { VesselUI } from '@/app/types/api';
 
-interface CreateVesselDialogProps {
+interface EditVesselDialogProps {
     isOpen: boolean;
+    vessel: VesselUI | null;
     onClose: () => void;
     onSuccess?: () => void;
 }
 
 interface FormData {
+    id: string;
     name: string;
     previous_name: string;
     imo: string;
@@ -28,8 +31,9 @@ interface FormData {
     image?: File;
 }
 
-export default function CreateVesselDialog({ isOpen, onClose, onSuccess }: CreateVesselDialogProps) {
+export default function EditVesselDialog({ isOpen, vessel, onClose, onSuccess }: EditVesselDialogProps) {
     const [formData, setFormData] = useState<FormData>({
+        id: '',
         name: '',
         previous_name: '',
         imo: '',
@@ -51,7 +55,7 @@ export default function CreateVesselDialog({ isOpen, onClose, onSuccess }: Creat
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Hooks
-    const createVesselMutation = useCreateVessel();
+    const updateVesselMutation = useUpdateVessel();
     const updateImageMutation = useUpdateVesselImage();
     const { data: vesselTypes = [], isLoading: typesLoading } = useVesselTypes();
     const { data: companies = [], isLoading: companiesLoading } = useCompanies();
@@ -68,6 +72,63 @@ export default function CreateVesselDialog({ isOpen, onClose, onSuccess }: Creat
         'ClassNK', 'Korean Register', 'China Classification Society', 'Russian Maritime Register',
         'Indian Register of Shipping', 'Turkish Lloyd'
     ];
+
+    // Initialize form data when vessel changes
+    useEffect(() => {
+        if (vessel && isOpen) {
+            // Find company ID from the company name
+            const company = companies.find(c => c.name === vessel.company);
+            // Find vessel type ID from the type name
+            const vesselType = vesselTypes.find(vt => vt.name === vessel.type);
+
+            setFormData({
+                id: vessel.id,
+                name: vessel.name || '',
+                previous_name: '', // Need to fetch from detailed API
+                imo: vessel.imo || '',
+                mmsi: '', // Need to fetch from detailed API
+                flag: '', // Need to fetch from detailed API
+                callsign: '', // Need to fetch from detailed API
+                gross_tonnage: '', // Need to fetch from detailed API
+                summer_deadweight: '', // Need to fetch from detailed API
+                year_of_build: '', // Need to fetch from detailed API
+                place_of_build: '', // Need to fetch from detailed API
+                vesseltype_id: vesselType?.id.toString() || '',
+                class_name: '', // Need to fetch from detailed API
+                company_id: company?.id || '',
+            });
+
+            // Set existing image preview if available
+            if (vessel.image) {
+                setImagePreview(vessel.image);
+            }
+        }
+    }, [vessel, companies, vesselTypes, isOpen]);
+
+    // Reset form when dialog closes
+    useEffect(() => {
+        if (!isOpen) {
+            setFormData({
+                id: '',
+                name: '',
+                previous_name: '',
+                imo: '',
+                mmsi: '',
+                flag: '',
+                callsign: '',
+                gross_tonnage: '',
+                summer_deadweight: '',
+                year_of_build: '',
+                place_of_build: '',
+                vesseltype_id: '',
+                class_name: '',
+                company_id: '',
+            });
+            setImagePreview('');
+            setError('');
+            setSuccess('');
+        }
+    }, [isOpen]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -112,7 +173,7 @@ export default function CreateVesselDialog({ isOpen, onClose, onSuccess }: Creat
             ...prev,
             image: undefined
         }));
-        setImagePreview('');
+        setImagePreview(vessel?.image || '');
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -120,6 +181,12 @@ export default function CreateVesselDialog({ isOpen, onClose, onSuccess }: Creat
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!vessel) {
+            setError('No vessel selected for editing');
+            return;
+        }
+
         setError('');
         setSuccess('');
 
@@ -150,8 +217,9 @@ export default function CreateVesselDialog({ isOpen, onClose, onSuccess }: Creat
         }
 
         try {
-            // Create vessel first
-            const vesselResponse = await createVesselMutation.mutateAsync({
+            // Update vessel data first
+            await updateVesselMutation.mutateAsync({
+                id: formData.id,
                 name: formData.name,
                 previous_name: formData.previous_name,
                 imo: formData.imo,
@@ -169,11 +237,11 @@ export default function CreateVesselDialog({ isOpen, onClose, onSuccess }: Creat
 
             let imageUploadSuccess = true;
 
-            // Upload image if provided
-            if (formData.image && vesselResponse.data.id) {
+            // Upload image if a new one is provided
+            if (formData.image) {
                 try {
                     await updateImageMutation.mutateAsync({
-                        vesselId: vesselResponse.data.id,
+                        vesselId: vessel.id,
                         imageFile: formData.image,
                     });
                 } catch (imageError) {
@@ -183,9 +251,9 @@ export default function CreateVesselDialog({ isOpen, onClose, onSuccess }: Creat
             }
 
             if (imageUploadSuccess) {
-                setSuccess('Vessel created successfully!');
+                setSuccess('Vessel updated successfully!');
             } else {
-                setSuccess('Vessel created successfully, but image upload failed. You can update the image later.');
+                setSuccess('Vessel updated successfully, but image upload failed. You can update the image later.');
             }
 
             onSuccess?.();
@@ -194,36 +262,18 @@ export default function CreateVesselDialog({ isOpen, onClose, onSuccess }: Creat
             }, 1500);
 
         } catch (error: any) {
-            console.error('Error creating vessel:', error);
-            setError(error.message || 'Failed to create vessel. Please try again.');
+            console.error('Error updating vessel:', error);
+            setError(error.message || 'Failed to update vessel. Please try again.');
         }
     };
 
     const handleClose = () => {
-        setFormData({
-            name: '',
-            previous_name: '',
-            imo: '',
-            mmsi: '',
-            flag: '',
-            callsign: '',
-            gross_tonnage: '',
-            summer_deadweight: '',
-            year_of_build: '',
-            place_of_build: '',
-            vesseltype_id: '',
-            class_name: '',
-            company_id: '',
-        });
-        setImagePreview('');
-        setError('');
-        setSuccess('');
         onClose();
     };
 
-    if (!isOpen) return null;
+    if (!isOpen || !vessel) return null;
 
-    const isLoading = createVesselMutation.isPending || updateImageMutation.isPending;
+    const isLoading = updateVesselMutation.isPending || updateImageMutation.isPending;
 
     return (
         <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -231,7 +281,7 @@ export default function CreateVesselDialog({ isOpen, onClose, onSuccess }: Creat
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b [data-theme='dark']_&:border-gray-700">
                     <h2 className="text-xl font-semibold text-gray-800 [data-theme='dark']_&:text-white">
-                        Add New Vessel
+                        Edit Vessel
                     </h2>
                     <button
                         onClick={handleClose}
@@ -259,14 +309,16 @@ export default function CreateVesselDialog({ isOpen, onClose, onSuccess }: Creat
                                         alt="Vessel preview"
                                         className="w-32 h-20 object-cover rounded-lg border border-gray-300"
                                     />
-                                    <button
-                                        type="button"
-                                        onClick={removeImage}
-                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-                                        disabled={isLoading}
-                                    >
-                                        ×
-                                    </button>
+                                    {formData.image && (
+                                        <button
+                                            type="button"
+                                            onClick={removeImage}
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                                            disabled={isLoading}
+                                        >
+                                            ×
+                                        </button>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="w-32 h-20 bg-gray-200 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center [data-theme='dark']_&:bg-gray-700 [data-theme='dark']_&:border-gray-600">
@@ -283,16 +335,18 @@ export default function CreateVesselDialog({ isOpen, onClose, onSuccess }: Creat
                                 className="hidden"
                                 disabled={isLoading}
                             />
-                            <button
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 [data-theme='dark']_&:bg-gray-700 [data-theme='dark']_&:text-gray-300 [data-theme='dark']_&:hover:bg-gray-600"
-                                disabled={isLoading}
-                            >
-                                Choose Image
-                            </button>
+                            <div>
+                                <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 [data-theme='dark']_&:bg-gray-700 [data-theme='dark']_&:text-gray-300 [data-theme='dark']_&:hover:bg-gray-600"
+                                    disabled={isLoading}
+                                >
+                                    Change Image
+                                </button>
+                                <p className="text-xs text-gray-500 mt-1">PNG, JPG, or JPEG. Max 5MB.</p>
+                            </div>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">PNG, JPG, or JPEG. Max 5MB.</p>
                     </div>
 
                     {/* Basic Information */}
@@ -563,7 +617,7 @@ export default function CreateVesselDialog({ isOpen, onClose, onSuccess }: Creat
                             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={isLoading}
                         >
-                            {isLoading ? 'Creating...' : 'Create Vessel'}
+                            {isLoading ? 'Updating...' : 'Update Vessel'}
                         </button>
                     </div>
                 </form>

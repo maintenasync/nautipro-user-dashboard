@@ -1,22 +1,59 @@
-// app/dashboard/components/pages/Vessels.tsx
+// app/dashboard/components/pages/Vessels.tsx - Updated with full CRUD
 
 'use client';
 
 import { useState } from 'react';
 import CreateVesselDialog from '../dialogs/CreateVesselDialog';
+import EditVesselDialog from '../dialogs/EditVesselDialog';
 import VesselDetailDialog from '../dialogs/VesselDetailDialog';
-import { useAllVessels} from '@/app/hooks/useApiQuery';
+import ConfirmDeleteDialog from '../dialogs/ConfirmDeleteDialog';
+import { useAllVessels, useDeleteVessel, useCompanies } from '@/app/hooks/useApiQuery';
+import type { VesselUI } from '@/app/types/api';
 
 export default function Vessels() {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [selectedVesselId, setSelectedVesselId] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [companyFilter, setCompanyFilter] = useState('All Companies');
+    const [typeFilter, setTypeFilter] = useState('All Types');
+    const [statusFilter, setStatusFilter] = useState('All Status');
 
-    // Fetch vessels data
+    // Fetch data
     const { data: vessels = [], isLoading, error, refetch } = useAllVessels();
+    const { data: companies = [] } = useCompanies();
+    const deleteVesselMutation = useDeleteVessel();
+
+    // Get filter options
+    const availableCompanies = ['All Companies', ...Array.from(new Set(vessels.map(v => v.company)))];
+    const availableTypes = ['All Types', ...Array.from(new Set(vessels.map(v => v.type)))];
+    const availableStatuses = ['All Status', 'Active', 'Inactive'];
+
+    // Filter vessels
+    const filteredVessels = vessels.filter(vessel => {
+        const matchesSearch =
+            vessel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            vessel.imo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            vessel.company.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesCompany = companyFilter === 'All Companies' || vessel.company === companyFilter;
+        const matchesType = typeFilter === 'All Types' || vessel.type === typeFilter;
+        const matchesStatus = statusFilter === 'All Status' || vessel.status === statusFilter;
+
+        return matchesSearch && matchesCompany && matchesType && matchesStatus;
+    });
+
+    const selectedVessel = vessels.find(v => v.id === selectedVesselId) || null;
 
     const handleCreateVessel = () => {
         setIsCreateDialogOpen(true);
+    };
+
+    const handleEditVessel = (vesselId: string) => {
+        setSelectedVesselId(vesselId);
+        setIsEditDialogOpen(true);
     };
 
     const handleViewVesselDetail = (vesselId: string) => {
@@ -24,132 +61,60 @@ export default function Vessels() {
         setIsDetailDialogOpen(true);
     };
 
-    const handleCloseCreateDialog = () => {
-        setIsCreateDialogOpen(false);
-    };
-
-    const handleCloseDetailDialog = () => {
-        setIsDetailDialogOpen(false);
-        setSelectedVesselId(null);
-    };
-
-    const handleSubmitVessel = async (vesselData: { name: string; vesselType: string; company: string; imo: string; }) => {
-        // TODO: Implement create vessel API call
-        console.log('Creating vessel:', vesselData);
-
-        // For now, just close dialog and refetch
-        setIsCreateDialogOpen(false);
-        refetch();
-    };
-
-    const handleEditVessel = (vesselId: string) => {
-        console.log('Edit vessel:', vesselId);
-        // TODO: Implement edit functionality
-        setIsDetailDialogOpen(false);
-        setSelectedVesselId(null);
-    };
-
     const handleDeleteVessel = (vesselId: string) => {
-        if (window.confirm('Are you sure you want to delete this vessel?')) {
-            // TODO: Implement delete vessel API call
-            console.log('Delete vessel:', vesselId);
+        setSelectedVesselId(vesselId);
+        setIsDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!selectedVesselId) return;
+
+        try {
+            await deleteVesselMutation.mutateAsync(selectedVesselId);
+            setIsDeleteDialogOpen(false);
+            setSelectedVesselId(null);
             refetch();
+        } catch (error: any) {
+            // Error is handled by the mutation - will be shown in the dialog
+            console.error('Delete failed:', error);
         }
+    };
+
+    const handleCloseDialogs = () => {
+        setIsCreateDialogOpen(false);
+        setIsEditDialogOpen(false);
+        setIsDetailDialogOpen(false);
+        setIsDeleteDialogOpen(false);
+        setSelectedVesselId(null);
+    };
+
+    const handleSuccess = () => {
+        refetch();
+        handleCloseDialogs();
     };
 
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'Active':
-                return 'bg-green-100 text-green-800 [data-theme=\'dark\']_&:bg-green-900 [data-theme=\'dark\']_&:text-green-200';
-            case 'Maintenance':
-                return 'bg-yellow-100 text-yellow-800 [data-theme=\'dark\']_&:bg-yellow-900 [data-theme=\'dark\']_&:text-yellow-200';
+                return 'bg-green-100 text-green-800 [data-theme=\'dark\']_&:bg-green-900 [data-theme=\'dark\']_&:text-green-300';
             case 'Inactive':
-                return 'bg-red-100 text-red-800 [data-theme=\'dark\']_&:bg-red-900 [data-theme=\'dark\']_&:text-red-200';
+                return 'bg-red-100 text-red-800 [data-theme=\'dark\']_&:bg-red-900 [data-theme=\'dark\']_&:text-red-300';
             default:
-                return 'bg-gray-100 text-gray-800 [data-theme=\'dark\']_&:bg-gray-700 [data-theme=\'dark\']_&:text-gray-200';
+                return 'bg-gray-100 text-gray-800 [data-theme=\'dark\']_&:bg-gray-700 [data-theme=\'dark\']_&:text-gray-300';
         }
     };
 
-    // Loading state
-    if (isLoading) {
-        return (
-            <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-800 [data-theme='dark']_&:text-white">Vessels</h1>
-                        <p className="text-gray-600 [data-theme='dark']_&:text-gray-400 mt-1">Manage your fleet vessels</p>
-                    </div>
-                </div>
-
-                {/* Loading Statistics */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="bg-white p-4 rounded-lg shadow animate-pulse [data-theme='dark']_&:bg-gray-800">
-                            <div className="h-4 bg-gray-200 rounded mb-2 [data-theme='dark']_&:bg-gray-700"></div>
-                            <div className="h-8 bg-gray-200 rounded [data-theme='dark']_&:bg-gray-700"></div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Loading Table */}
-                <div className="bg-white rounded-lg shadow overflow-hidden [data-theme='dark']_&:bg-gray-800">
-                    <div className="p-6">
-                        <div className="h-6 bg-gray-200 rounded mb-4 [data-theme='dark']_&:bg-gray-700"></div>
-                        <div className="space-y-3">
-                            {[1, 2, 3, 4, 5].map((i) => (
-                                <div key={i} className="h-4 bg-gray-200 rounded [data-theme='dark']_&:bg-gray-700"></div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    // Error state
     if (error) {
         return (
             <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-800 [data-theme='dark']_&:text-white">Vessels</h1>
-                        <p className="text-gray-600 [data-theme='dark']_&:text-gray-400 mt-1">Manage your fleet vessels</p>
-                    </div>
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded [data-theme='dark']_&:bg-red-900 [data-theme='dark']_&:border-red-700 [data-theme='dark']_&:text-red-300">
+                    Error loading vessels: {error.message}
                     <button
-                        onClick={handleCreateVessel}
-                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-150 flex items-center space-x-2"
+                        onClick={() => refetch()}
+                        className="ml-2 underline hover:no-underline"
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        <span>Add New Vessel</span>
+                        Try again
                     </button>
-                </div>
-
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 [data-theme='dark']_&:bg-red-900 [data-theme='dark']_&:border-red-700">
-                    <div className="flex">
-                        <div className="flex-shrink-0">
-                            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                            </svg>
-                        </div>
-                        <div className="ml-3">
-                            <h3 className="text-sm font-medium text-red-800 [data-theme='dark']_&:text-red-200">
-                                Error loading vessels
-                            </h3>
-                            <div className="mt-2 text-sm text-red-700 [data-theme='dark']_&:text-red-300">
-                                <p>Failed to fetch vessels data. Please check your connection and try again.</p>
-                            </div>
-                            <div className="mt-4">
-                                <button
-                                    onClick={() => refetch()}
-                                    className="bg-red-100 text-red-800 px-3 py-2 text-sm rounded-md hover:bg-red-200 [data-theme='dark']_&:bg-red-800 [data-theme='dark']_&:text-red-200 [data-theme='dark']_&:hover:bg-red-700"
-                                >
-                                    Try Again
-                                </button>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         );
@@ -160,149 +125,266 @@ export default function Vessels() {
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800 [data-theme='dark']_&:text-white">Vessels</h1>
-                    <p className="text-gray-600 [data-theme='dark']_&:text-gray-400 mt-1">Manage your fleet vessels</p>
+                    <h1 className="text-2xl font-bold text-gray-800 [data-theme='dark']_&:text-white">
+                        Vessels
+                    </h1>
+                    <p className="text-gray-600 [data-theme='dark']_&:text-gray-300">
+                        Manage your fleet of vessels and their specifications
+                    </p>
                 </div>
                 <button
                     onClick={handleCreateVessel}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-150 flex items-center space-x-2"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    <span>Add New Vessel</span>
+                    <span>Add Vessel</span>
                 </button>
             </div>
 
-            {/* Statistics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-white p-4 rounded-lg shadow [data-theme='dark']_&:bg-gray-800">
-                    <h3 className="text-sm font-medium text-gray-500 [data-theme='dark']_&:text-gray-400">Total Vessels</h3>
-                    <p className="text-2xl font-bold text-gray-900 [data-theme='dark']_&:text-white">{vessels.length}</p>
+            {/* Filters */}
+            <div className="bg-white [data-theme='dark']_&:bg-gray-800 rounded-lg shadow mb-6 p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    {/* Search */}
+                    <div className="lg:col-span-2">
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Search vessels by name, IMO, or company..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md [data-theme='dark']_&:border-gray-600 [data-theme='dark']_&:bg-gray-700 [data-theme='dark']_&:text-white"
+                            />
+                            <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    {/* Company Filter */}
+                    <div>
+                        <select
+                            value={companyFilter}
+                            onChange={(e) => setCompanyFilter(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded-md [data-theme='dark']_&:border-gray-600 [data-theme='dark']_&:bg-gray-700 [data-theme='dark']_&:text-white"
+                        >
+                            {availableCompanies.map(company => (
+                                <option key={company} value={company}>
+                                    {company}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Type Filter */}
+                    <div>
+                        <select
+                            value={typeFilter}
+                            onChange={(e) => setTypeFilter(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded-md [data-theme='dark']_&:border-gray-600 [data-theme='dark']_&:bg-gray-700 [data-theme='dark']_&:text-white"
+                        >
+                            {availableTypes.map(type => (
+                                <option key={type} value={type}>
+                                    {type}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Status Filter */}
+                    <div>
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded-md [data-theme='dark']_&:border-gray-600 [data-theme='dark']_&:bg-gray-700 [data-theme='dark']_&:text-white"
+                        >
+                            {availableStatuses.map(status => (
+                                <option key={status} value={status}>
+                                    {status}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
-                <div className="bg-white p-4 rounded-lg shadow [data-theme='dark']_&:bg-gray-800">
-                    <h3 className="text-sm font-medium text-gray-500 [data-theme='dark']_&:text-gray-400">Active</h3>
-                    <p className="text-2xl font-bold text-green-600">{vessels.filter(v => v.status === 'Active').length}</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow [data-theme='dark']_&:bg-gray-800">
-                    <h3 className="text-sm font-medium text-gray-500 [data-theme='dark']_&:text-gray-400">Maintenance</h3>
-                    <p className="text-2xl font-bold text-yellow-600">{vessels.filter(v => v.status === 'Maintenance').length}</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow [data-theme='dark']_&:bg-gray-800">
-                    <h3 className="text-sm font-medium text-gray-500 [data-theme='dark']_&:text-gray-400">Inactive</h3>
-                    <p className="text-2xl font-bold text-red-600">{vessels.filter(v => v.status === 'Inactive').length}</p>
+
+                {/* Filter Summary */}
+                <div className="mt-3 flex items-center justify-between text-sm text-gray-500 [data-theme='dark']_&:text-gray-400">
+                    <div>
+                        {isLoading ? 'Loading...' : `${filteredVessels.length} vessels`}
+                        {filteredVessels.length !== vessels.length && ` of ${vessels.length} total`}
+                    </div>
+                    {(searchTerm || companyFilter !== 'All Companies' || typeFilter !== 'All Types' || statusFilter !== 'All Status') && (
+                        <button
+                            onClick={() => {
+                                setSearchTerm('');
+                                setCompanyFilter('All Companies');
+                                setTypeFilter('All Types');
+                                setStatusFilter('All Status');
+                            }}
+                            className="text-blue-600 hover:text-blue-800 [data-theme='dark']_&:text-blue-400 [data-theme='dark']_&:hover:text-blue-300"
+                        >
+                            Clear filters
+                        </button>
+                    )}
                 </div>
             </div>
 
-            {/* Vessels Table */}
-            {vessels.length > 0 ? (
-                <div className="bg-white rounded-lg shadow overflow-hidden [data-theme='dark']_&:bg-gray-800">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-50 [data-theme='dark']_&:bg-gray-700">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 [data-theme='dark']_&:text-gray-300 uppercase tracking-wider">Vessel Name</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 [data-theme='dark']_&:text-gray-300 uppercase tracking-wider">Type</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 [data-theme='dark']_&:text-gray-300 uppercase tracking-wider">Company</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 [data-theme='dark']_&:text-gray-300 uppercase tracking-wider">IMO Number</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 [data-theme='dark']_&:text-gray-300 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 [data-theme='dark']_&:text-gray-300 uppercase tracking-wider">Actions</th>
-                            </tr>
-                            </thead>
-                            <tbody className="bg-white [data-theme='dark']_&:bg-gray-800 divide-y divide-gray-200 [data-theme='dark']_&:divide-gray-600">
-                            {vessels.map((vessel) => (
-                                <tr key={vessel.id} className="hover:bg-gray-50 [data-theme='dark']_&:hover:bg-gray-700">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center">
-                                            <div className="flex-shrink-0 h-10 w-10">
-                                                {vessel.image ? (
-                                                    <img className="h-10 w-10 rounded-lg object-cover" src={vessel.image} alt={vessel.name} />
-                                                ) : (
-                                                    <div className="h-10 w-10 rounded-lg bg-gray-300 flex items-center justify-center [data-theme='dark']_&:bg-gray-600">
-                                                        <svg className="h-6 w-6 text-gray-500 [data-theme='dark']_&:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                        </svg>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="ml-4">
-                                                <div className="text-sm font-medium text-gray-900 [data-theme='dark']_&:text-white">{vessel.name}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 [data-theme='dark']_&:text-white">{vessel.type}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 [data-theme='dark']_&:text-gray-400">{vessel.company}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 [data-theme='dark']_&:text-white">{vessel.imo}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(vessel.status)}`}>
-                        {vessel.status}
-                      </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button
-                                            onClick={() => handleViewVesselDetail(vessel.id)}
-                                            className="text-blue-600 hover:text-blue-900 [data-theme='dark']_&:text-blue-400 [data-theme='dark']_&:hover:text-blue-300 mr-4"
-                                        >
-                                            View
-                                        </button>
-                                        <button
-                                            onClick={() => handleEditVessel(vessel.id)}
-                                            className="text-indigo-600 hover:text-indigo-900 [data-theme='dark']_&:text-indigo-400 [data-theme='dark']_&:hover:text-indigo-300 mr-4"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleDeleteVessel(vessel.id)}
-                                            className="text-red-600 hover:text-red-900 [data-theme='dark']_&:text-red-400 [data-theme='dark']_&:hover:text-red-300"
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                            </tbody>
-                        </table>
-                    </div>
+            {/* Vessels Grid */}
+            {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[...Array(6)].map((_, index) => (
+                        <div key={index} className="bg-white [data-theme='dark']_&:bg-gray-800 rounded-lg shadow animate-pulse">
+                            <div className="aspect-video bg-gray-200 [data-theme='dark']_&:bg-gray-600 rounded-t-lg"></div>
+                            <div className="p-4">
+                                <div className="h-4 bg-gray-200 [data-theme='dark']_&:bg-gray-600 rounded mb-2"></div>
+                                <div className="h-3 bg-gray-200 [data-theme='dark']_&:bg-gray-600 rounded mb-4"></div>
+                                <div className="flex justify-between">
+                                    <div className="h-3 bg-gray-200 [data-theme='dark']_&:bg-gray-600 rounded w-1/3"></div>
+                                    <div className="h-3 bg-gray-200 [data-theme='dark']_&:bg-gray-600 rounded w-1/4"></div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : filteredVessels.length === 0 ? (
+                <div className="bg-white [data-theme='dark']_&:bg-gray-800 rounded-lg shadow p-8 text-center">
+                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900 [data-theme='dark']_&:text-white">No vessels found</h3>
+                    <p className="mt-1 text-sm text-gray-500 [data-theme='dark']_&:text-gray-400">
+                        {searchTerm || companyFilter !== 'All Companies' || typeFilter !== 'All Types' || statusFilter !== 'All Status'
+                            ? 'Try adjusting your filters to find vessels.'
+                            : 'Get started by adding your first vessel to the fleet.'
+                        }
+                    </p>
+                    {!(searchTerm || companyFilter !== 'All Companies' || typeFilter !== 'All Types' || statusFilter !== 'All Status') && (
+                        <div className="mt-6">
+                            <button
+                                onClick={handleCreateVessel}
+                                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                            >
+                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Add Vessel
+                            </button>
+                        </div>
+                    )}
                 </div>
             ) : (
-                <div className="text-center py-12">
-                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                    <h3 className="mt-2 text-sm font-medium text-gray-900 [data-theme='dark']_&:text-white">No vessels</h3>
-                    <p className="mt-1 text-sm text-gray-500 [data-theme='dark']_&:text-gray-400">Get started by adding your first vessel.</p>
-                    <div className="mt-6">
-                        <button
-                            onClick={handleCreateVessel}
-                            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                        >
-                            <svg className="-ml-1 mr-2 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                            </svg>
-                            Add New Vessel
-                        </button>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredVessels.map((vessel) => (
+                        <div key={vessel.id} className="bg-white [data-theme='dark']_&:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
+                            {/* Vessel Image */}
+                            <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden [data-theme='dark']_&:bg-gray-700">
+                                {vessel.image ? (
+                                    <img
+                                        src={vessel.image}
+                                        alt={vessel.name}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="p-4">
+                                {/* Vessel Header */}
+                                <div className="flex justify-between items-start mb-2">
+                                    <h3 className="text-lg font-semibold text-gray-800 [data-theme='dark']_&:text-white truncate">
+                                        {vessel.name}
+                                    </h3>
+                                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(vessel.status)}`}>
+                                        {vessel.status}
+                                    </span>
+                                </div>
+
+                                {/* Vessel Info */}
+                                <div className="space-y-1 mb-4 text-sm text-gray-600 [data-theme='dark']_&:text-gray-400">
+                                    <div className="flex justify-between">
+                                        <span>Type:</span>
+                                        <span className="font-medium">{vessel.type}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span>IMO:</span>
+                                        <span className="font-medium">{vessel.imo}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span>Company:</span>
+                                        <span className="font-medium truncate ml-2">{vessel.company}</span>
+                                    </div>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex space-x-2">
+                                    <button
+                                        onClick={() => handleViewVesselDetail(vessel.id)}
+                                        className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm [data-theme='dark']_&:bg-gray-700 [data-theme='dark']_&:text-gray-300 [data-theme='dark']_&:hover:bg-gray-600"
+                                    >
+                                        Details
+                                    </button>
+                                    <button
+                                        onClick={() => handleEditVessel(vessel.id)}
+                                        className="px-3 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 text-sm [data-theme='dark']_&:bg-blue-900 [data-theme='dark']_&:text-blue-300 [data-theme='dark']_&:hover:bg-blue-800"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteVessel(vessel.id)}
+                                        className="px-3 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 text-sm [data-theme='dark']_&:bg-red-900 [data-theme='dark']_&:text-red-300 [data-theme='dark']_&:hover:bg-red-800"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             )}
 
             {/* Dialogs */}
-            {isCreateDialogOpen && (
-                <CreateVesselDialog
-                    isOpen={isCreateDialogOpen}
-                    onClose={handleCloseCreateDialog}
-                    onSubmit={handleSubmitVessel}
-                />
-            )}
+            <CreateVesselDialog
+                isOpen={isCreateDialogOpen}
+                onClose={handleCloseDialogs}
+                onSuccess={handleSuccess}
+            />
 
-            {isDetailDialogOpen && selectedVesselId && (
-                <VesselDetailDialog
-                    isOpen={isDetailDialogOpen}
-                    onClose={handleCloseDetailDialog}
-                    vesselId={selectedVesselId}
-                    onEdit={handleEditVessel}
-                    onDelete={handleDeleteVessel}
-                />
-            )}
+            <EditVesselDialog
+                isOpen={isEditDialogOpen}
+                vessel={selectedVessel}
+                onClose={handleCloseDialogs}
+                onSuccess={handleSuccess}
+            />
+
+            <VesselDetailDialog
+                isOpen={isDetailDialogOpen}
+                vesselId={selectedVesselId}
+                onClose={handleCloseDialogs}
+                onEdit={(vesselId) => {
+                    setIsDetailDialogOpen(false);
+                    handleEditVessel(vesselId);
+                }}
+                onDelete={(vesselId) => {
+                    setIsDetailDialogOpen(false);
+                    handleDeleteVessel(vesselId);
+                }}
+            />
+
+            <ConfirmDeleteDialog
+                isOpen={isDeleteDialogOpen}
+                title="Delete Vessel"
+                message={`Are you sure you want to delete "${selectedVessel?.name}"? This action cannot be undone and will affect all associated crew members and licenses.`}
+                onConfirm={handleConfirmDelete}
+                onCancel={handleCloseDialogs}
+                isLoading={deleteVesselMutation.isPending}
+                error={deleteVesselMutation.error?.message}
+            />
         </div>
     );
 }

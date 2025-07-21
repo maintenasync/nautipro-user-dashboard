@@ -1,12 +1,14 @@
-// app/dashboard/components/dialogs/CreateCompanyDialog.tsx
+// app/dashboard/components/dialogs/EditCompanyDialog.tsx
 
 'use client';
 
-import { useState, useRef } from 'react';
-import { useCreateCompany, useUpdateCompanyLogo } from '@/app/hooks/useApiQuery';
+import { useState, useRef, useEffect } from 'react';
+import { useUpdateCompany, useUpdateCompanyLogo } from '@/app/hooks/useApiQuery';
+import type { CompanyUI } from '@/app/types/api';
 
-interface CreateCompanyDialogProps {
+interface EditCompanyDialogProps {
     isOpen: boolean;
+    company: CompanyUI | null;
     onClose: () => void;
     onSuccess?: () => void;
 }
@@ -25,7 +27,7 @@ interface FormData {
     logo?: File;
 }
 
-export default function CreateCompanyDialog({ isOpen, onClose, onSuccess }: CreateCompanyDialogProps) {
+export default function EditCompanyDialog({ isOpen, company, onClose, onSuccess }: EditCompanyDialogProps) {
     const [formData, setFormData] = useState<FormData>({
         name: '',
         registration_number: '',
@@ -45,8 +47,49 @@ export default function CreateCompanyDialog({ isOpen, onClose, onSuccess }: Crea
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Hooks
-    const createCompanyMutation = useCreateCompany();
+    const updateCompanyMutation = useUpdateCompany();
     const updateLogoMutation = useUpdateCompanyLogo();
+
+    // Initialize form data when company changes
+    useEffect(() => {
+        if (company && isOpen) {
+            // You'll need to fetch the full company details since CompanyUI doesn't have all fields
+            // For now, we'll populate what we can from the UI data
+            setFormData({
+                name: company.name || '',
+                registration_number: '', // Need to fetch from API
+                address: '',
+                city: company.location.split(', ')[0] || '',
+                province: company.location.split(', ')[1] || '',
+                postal_code: '',
+                country: 'Indonesia',
+                phone: '',
+                email: '',
+                website: '',
+            });
+        }
+    }, [company, isOpen]);
+
+    // Reset form when dialog closes
+    useEffect(() => {
+        if (!isOpen) {
+            setFormData({
+                name: '',
+                registration_number: '',
+                address: '',
+                city: '',
+                province: '',
+                postal_code: '',
+                country: 'Indonesia',
+                phone: '',
+                email: '',
+                website: '',
+            });
+            setLogoPreview('');
+            setError('');
+            setSuccess('');
+        }
+    }, [isOpen]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -99,6 +142,12 @@ export default function CreateCompanyDialog({ isOpen, onClose, onSuccess }: Crea
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!company) {
+            setError('No company selected for editing');
+            return;
+        }
+
         setError('');
         setSuccess('');
 
@@ -116,27 +165,30 @@ export default function CreateCompanyDialog({ isOpen, onClose, onSuccess }: Crea
         }
 
         try {
-            // Create company first
-            const companyResponse = await createCompanyMutation.mutateAsync({
-                name: formData.name,
-                registration_number: formData.registration_number,
-                address: formData.address,
-                city: formData.city,
-                province: formData.province,
-                postal_code: formData.postal_code,
-                country: formData.country,
-                phone: formData.phone,
-                email: formData.email,
-                website: formData.website,
+            // Update company data first
+            await updateCompanyMutation.mutateAsync({
+                companyId: company.id,
+                data: {
+                    name: formData.name,
+                    registration_number: formData.registration_number,
+                    address: formData.address,
+                    city: formData.city,
+                    province: formData.province,
+                    postal_code: formData.postal_code,
+                    country: formData.country,
+                    phone: formData.phone,
+                    email: formData.email,
+                    website: formData.website,
+                },
             });
 
             let logoUploadSuccess = true;
 
             // Upload logo if provided
-            if (formData.logo && companyResponse.data.id) {
+            if (formData.logo) {
                 try {
                     await updateLogoMutation.mutateAsync({
-                        companyId: companyResponse.data.id,
+                        companyId: company.id,
                         logoFile: formData.logo,
                     });
                 } catch (logoError) {
@@ -146,9 +198,9 @@ export default function CreateCompanyDialog({ isOpen, onClose, onSuccess }: Crea
             }
 
             if (logoUploadSuccess) {
-                setSuccess('Company created successfully!');
+                setSuccess('Company updated successfully!');
             } else {
-                setSuccess('Company created successfully, but logo upload failed. You can update the logo later.');
+                setSuccess('Company updated successfully, but logo upload failed. You can update the logo later.');
             }
 
             onSuccess?.();
@@ -157,33 +209,18 @@ export default function CreateCompanyDialog({ isOpen, onClose, onSuccess }: Crea
             }, 1500);
 
         } catch (error: any) {
-            console.error('Error creating company:', error);
-            setError(error.message || 'Failed to create company. Please try again.');
+            console.error('Error updating company:', error);
+            setError(error.message || 'Failed to update company. Please try again.');
         }
     };
 
     const handleClose = () => {
-        setFormData({
-            name: '',
-            registration_number: '',
-            address: '',
-            city: '',
-            province: '',
-            postal_code: '',
-            country: 'Indonesia',
-            phone: '',
-            email: '',
-            website: '',
-        });
-        setLogoPreview('');
-        setError('');
-        setSuccess('');
         onClose();
     };
 
-    if (!isOpen) return null;
+    if (!isOpen || !company) return null;
 
-    const isLoading = createCompanyMutation.isPending || updateLogoMutation.isPending;
+    const isLoading = updateCompanyMutation.isPending || updateLogoMutation.isPending;
 
     return (
         <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -191,7 +228,7 @@ export default function CreateCompanyDialog({ isOpen, onClose, onSuccess }: Crea
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b [data-theme='dark']_&:border-gray-700">
                     <h2 className="text-xl font-semibold text-gray-800 [data-theme='dark']_&:text-white">
-                        Create New Company
+                        Edit Company
                     </h2>
                     <button
                         onClick={handleClose}
@@ -243,16 +280,18 @@ export default function CreateCompanyDialog({ isOpen, onClose, onSuccess }: Crea
                                 className="hidden"
                                 disabled={isLoading}
                             />
-                            <button
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 [data-theme='dark']_&:bg-gray-700 [data-theme='dark']_&:text-gray-300 [data-theme='dark']_&:hover:bg-gray-600"
-                                disabled={isLoading}
-                            >
-                                Choose Logo
-                            </button>
+                            <div>
+                                <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 [data-theme='dark']_&:bg-gray-700 [data-theme='dark']_&:text-gray-300 [data-theme='dark']_&:hover:bg-gray-600"
+                                    disabled={isLoading}
+                                >
+                                    Change Logo
+                                </button>
+                                <p className="text-xs text-gray-500 mt-1">PNG, JPG, or JPEG. Max 5MB.</p>
+                            </div>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">PNG, JPG, or JPEG. Max 5MB.</p>
                     </div>
 
                     {/* Basic Information */}
@@ -444,7 +483,7 @@ export default function CreateCompanyDialog({ isOpen, onClose, onSuccess }: Crea
                             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={isLoading}
                         >
-                            {isLoading ? 'Creating...' : 'Create Company'}
+                            {isLoading ? 'Updating...' : 'Update Company'}
                         </button>
                     </div>
                 </form>

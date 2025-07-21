@@ -1,8 +1,81 @@
-// app/hooks/useApiQuery.ts
+// app/hooks/useApiQuery.ts - Fixed with correct transform functions
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiService from '@/app/services/apiService';
-import type { Company, Vessel, CrewMember, License, Invitation, CompanyUI, VesselUI, CrewMemberUI, LicenseUI, InvitationUI } from '@/app/types/api';
+import type {
+    CompanyUI,
+    VesselUI,
+    CrewMemberUI,
+    LicenseUI,
+    InvitationUI,
+    Company,
+    Vessel,
+    CrewMember,
+    License,
+    Invitation,
+    VesselType,
+    UserRole
+} from '@/app/types/api';
 
+// CORRECTED Transform functions
+const transformCompanyForUI = (company: Company): CompanyUI => ({
+    id: company.id,
+    name: company.name,
+    location: `${company.city}, ${company.province}`,
+    created: new Date(parseInt(company.created_at)).toLocaleDateString('id-ID'),
+});
+
+const transformVesselForUI = (vessel: Vessel, companyName?: string): VesselUI => ({
+    id: vessel.id,
+    name: vessel.name.trim(),
+    type: vessel.vessel_type.name,
+    company: companyName || 'Unknown Company',
+    status: vessel.is_deleted ? 'Inactive' : 'Active',
+    imo: vessel.imo,
+    image: vessel.image,
+});
+
+const transformCrewForUI = (crew: CrewMember, vesselName?: string): CrewMemberUI => ({
+    id: crew.id,
+    name: crew.user.name,
+    email: crew.user.email,
+    role: crew.user_role.name,
+    vessel: vesselName || 'Unknown Vessel',
+    vessel_id: crew.vessel_id,
+    startDate: crew.start_at ? new Date(parseInt(crew.start_at)).toLocaleDateString('id-ID') : 'N/A',
+    status: crew.user.user_status ? 'Active' : 'Inactive',
+    avatar: crew.user.avatar,
+});
+
+// CORRECTED License transform function
+const transformLicenseForUI = (license: License): LicenseUI => {
+    const validUntil = new Date(parseInt(license.valid_until));
+    const now = new Date();
+    const daysRemaining = Math.ceil((validUntil.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    let status = 'Valid';
+    if (daysRemaining < 0) {
+        status = 'Expired';
+    } else if (daysRemaining <= 30) {
+        status = 'Expiring Soon';
+    }
+
+    return {
+        id: license.license_code, // Use license_code as id
+        license_code: license.license_code,
+        company_name: license.company.name,
+        vessel_name: license.vessel.name.trim(),
+        vessel_imo: license.vessel.imo,
+        role_name: license.role.name,
+        valid_until: validUntil.toLocaleDateString('id-ID'),
+        status,
+        days_remaining: daysRemaining,
+        vessel_image: license.vessel.image,
+        company_location: `${license.company.city}, ${license.company.province}`,
+    };
+};
+
+// CORRECTED Invitation transform function
 const transformInvitationForUI = (invitation: Invitation, vessels: VesselUI[] = []): InvitationUI => {
     const createdAt = new Date(parseInt(invitation.created_at));
     const expiredAt = new Date(parseInt(invitation.expired_at));
@@ -30,64 +103,225 @@ const transformInvitationForUI = (invitation: Invitation, vessels: VesselUI[] = 
     };
 };
 
-const transformLicenseForUI = (license: License): LicenseUI => {
-    const validUntil = new Date(parseInt(license.valid_until));
-    const now = new Date();
-    const daysRemaining = Math.ceil((validUntil.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+// ========== NEW HOOKS FOR ROLES AND VESSEL TYPES ==========
 
-    let status = 'Valid';
-    if (daysRemaining < 0) {
-        status = 'Expired';
-    } else if (daysRemaining <= 30) {
-        status = 'Expiring Soon';
-    }
-
-    return {
-        id: license.license_code,
-        license_code: license.license_code,
-        company_name: license.company.name,
-        vessel_name: license.vessel.name.trim(),
-        vessel_imo: license.vessel.imo,
-        role_name: license.role.name,
-        valid_until: validUntil.toLocaleDateString('id-ID'),
-        status,
-        days_remaining: daysRemaining,
-        vessel_image: license.vessel.image,
-        company_location: `${license.company.city}, ${license.company.province}`,
-    };
+export const useRoles = () => {
+    return useQuery({
+        queryKey: ['roles'],
+        queryFn: async () => {
+            const response = await apiService.getRoles();
+            return response.data;
+        },
+        staleTime: 10 * 60 * 1000, // 10 minutes - roles don't change often
+    });
 };
 
-// Helper functions to transform data for UI
-const transformCompanyForUI = (company: Company): CompanyUI => ({
-    id: company.id,
-    name: company.name,
-    location: `${company.city}, ${company.province}`,
-    created: new Date(parseInt(company.created_at)).toLocaleDateString('id-ID'),
-});
+export const useVesselTypes = () => {
+    return useQuery({
+        queryKey: ['vessel-types'],
+        queryFn: async () => {
+            const response = await apiService.getVesselTypes();
+            return response.data;
+        },
+        staleTime: 10 * 60 * 1000, // 10 minutes - vessel types don't change often
+    });
+};
 
-const transformVesselForUI = (vessel: Vessel, companyName?: string): VesselUI => ({
-    id: vessel.id,
-    name: vessel.name.trim(),
-    type: vessel.vessel_type.name,
-    company: companyName || 'Unknown Company',
-    status: vessel.is_deleted ? 'Inactive' : 'Active', // You might need better status logic
-    imo: vessel.imo,
-    image: vessel.image,
-});
+// ========== CREW MANAGEMENT MUTATIONS ==========
 
-const transformCrewForUI = (crew: CrewMember, vesselName?: string): CrewMemberUI => ({
-    id: crew.id,
-    name: crew.user.name,
-    email: crew.user.email,
-    role: crew.user_role.name,
-    vessel: vesselName || 'Unknown Vessel',
-    vessel_id: crew.vessel_id,
-    startDate: crew.start_at ? new Date(parseInt(crew.start_at)).toLocaleDateString('id-ID') : 'N/A',
-    status: crew.user.user_status ? 'Active' : 'Inactive',
-    avatar: crew.user.avatar,
-});
+export const useUpdateCrewMember = () => {
+    const queryClient = useQueryClient();
 
-// Companies Hooks
+    return useMutation({
+        mutationFn: (data: {
+            vessel_id: string;
+            user_role_code: string;
+            user_id: string;
+            company_id: string;
+        }) => apiService.updateVesselMember(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['crews'] });
+            queryClient.invalidateQueries({ queryKey: ['vessels'] });
+        },
+    });
+};
+
+export const useRemoveCrewMember = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (data: {
+            vessel_id: string;
+            user_role_code: string;
+            user_id: string;
+            company_id: string;
+        }) => apiService.removeVesselMember(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['crews'] });
+            queryClient.invalidateQueries({ queryKey: ['vessels'] });
+        },
+    });
+};
+
+// ========== COMPANY MUTATIONS ==========
+
+export const useCreateCompany = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (data: {
+            name: string;
+            registration_number: string;
+            address: string;
+            city: string;
+            province: string;
+            postal_code: string;
+            country: string;
+            phone: string;
+            email: string;
+            website: string;
+        }) => apiService.createCompany(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['companies'] });
+        },
+    });
+};
+
+export const useUpdateCompany = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ companyId, data }: {
+            companyId: string;
+            data: {
+                name: string;
+                registration_number: string;
+                address: string;
+                city: string;
+                province: string;
+                postal_code: string;
+                country: string;
+                phone: string;
+                email: string;
+                website: string;
+            };
+        }) => apiService.updateCompany(companyId, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['companies'] });
+        },
+    });
+};
+
+export const useUpdateCompanyLogo = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ companyId, logoFile }: {
+            companyId: string;
+            logoFile: File;
+        }) => apiService.updateCompanyLogo(companyId, logoFile),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['companies'] });
+        },
+    });
+};
+
+export const useDeleteCompany = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (companyId: string) => apiService.deleteCompany(companyId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['companies'] });
+            queryClient.invalidateQueries({ queryKey: ['vessels'] });
+            queryClient.invalidateQueries({ queryKey: ['crews'] });
+        },
+    });
+};
+
+// ========== VESSEL MUTATIONS ==========
+
+export const useCreateVessel = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (data: {
+            name: string;
+            previous_name?: string;
+            imo: string;
+            mmsi: string;
+            flag: string;
+            callsign: string;
+            gross_tonnage: number;
+            summer_deadweight: number;
+            year_of_build: number;
+            place_of_build: string;
+            vesseltype_id: number;
+            class_name: string;
+            company_id: string;
+        }) => apiService.createVessel(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['vessels'] });
+            queryClient.invalidateQueries({ queryKey: ['companies'] });
+        },
+    });
+};
+
+export const useUpdateVessel = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (data: {
+            id: string;
+            name: string;
+            previous_name?: string;
+            imo: string;
+            mmsi: string;
+            flag: string;
+            callsign: string;
+            gross_tonnage: number;
+            summer_deadweight: number;
+            year_of_build: number;
+            place_of_build: string;
+            vesseltype_id: number;
+            class_name: string;
+            company_id: string;
+        }) => apiService.updateVessel(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['vessels'] });
+        },
+    });
+};
+
+export const useUpdateVesselImage = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ vesselId, imageFile }: {
+            vesselId: string;
+            imageFile: File;
+        }) => apiService.updateVesselImage(vesselId, imageFile),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['vessels'] });
+        },
+    });
+};
+
+export const useDeleteVessel = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (vesselId: string) => apiService.deleteVessel(vesselId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['vessels'] });
+            queryClient.invalidateQueries({ queryKey: ['companies'] });
+            queryClient.invalidateQueries({ queryKey: ['crews'] });
+        },
+    });
+};
+
+// ========== EXISTING QUERY HOOKS ==========
+
 export const useCompanies = () => {
     return useQuery({
         queryKey: ['companies'],
@@ -95,7 +329,7 @@ export const useCompanies = () => {
             const response = await apiService.getCompanies();
             return response.data.map(transformCompanyForUI);
         },
-        staleTime: 5 * 60 * 1000, // 5 minutes
+        staleTime: 5 * 60 * 1000,
     });
 };
 
@@ -111,7 +345,6 @@ export const useCompany = (companyId: string) => {
     });
 };
 
-// Vessels Hooks
 export const useVesselsByCompany = (companyId: string) => {
     const { data: companies } = useCompanies();
 
@@ -123,11 +356,10 @@ export const useVesselsByCompany = (companyId: string) => {
             return response.data.map(vessel => transformVesselForUI(vessel, company?.name));
         },
         enabled: !!companyId,
-        staleTime: 3 * 60 * 1000, // 3 minutes
+        staleTime: 3 * 60 * 1000,
     });
 };
 
-// Get all vessels across all companies (for vessels page)
 export const useAllVessels = () => {
     const { data: companies } = useCompanies();
 
@@ -157,7 +389,6 @@ export const useAllVessels = () => {
     });
 };
 
-// Crews Hooks
 export const useCrewsByVessel = (vesselId: string) => {
     const { data: vessels } = useAllVessels();
 
@@ -169,7 +400,7 @@ export const useCrewsByVessel = (vesselId: string) => {
             return response.data.map(crew => transformCrewForUI(crew, vessel?.name));
         },
         enabled: !!vesselId,
-        staleTime: 2 * 60 * 1000, // 2 minutes
+        staleTime: 2 * 60 * 1000,
     });
 };
 
@@ -190,7 +421,6 @@ export const useCrewsByCompany = (companyId: string) => {
     });
 };
 
-// Get all crews across all companies (for crew management page)
 export const useAllCrews = () => {
     const { data: companies } = useCompanies();
     const { data: vessels } = useAllVessels();
@@ -222,7 +452,6 @@ export const useAllCrews = () => {
     });
 };
 
-// Filtering hooks for crew management
 export const useFilteredCrews = (filters: {
     vessel?: string;
     role?: string;
@@ -248,7 +477,8 @@ export const useFilteredCrews = (filters: {
     };
 };
 
-// Licenses Hooks
+// ========== LICENSES HOOKS ==========
+
 export const useLicenses = () => {
     return useQuery({
         queryKey: ['licenses'],
@@ -260,7 +490,6 @@ export const useLicenses = () => {
     });
 };
 
-// Filtering hook for licenses
 export const useFilteredLicenses = (filters: {
     company?: string;
     vessel?: string;
@@ -287,7 +516,8 @@ export const useFilteredLicenses = (filters: {
     };
 };
 
-// Invitations Hooks
+// ========== INVITATIONS HOOKS ==========
+
 export const useInvitations = () => {
     const { data: vessels = [] } = useAllVessels();
 
@@ -302,7 +532,6 @@ export const useInvitations = () => {
     });
 };
 
-// Invitation actions hooks
 export const useAcceptInvitation = () => {
     const queryClient = useQueryClient();
 
@@ -326,7 +555,6 @@ export const useRejectInvitation = () => {
     });
 };
 
-// Filtering hook for invitations
 export const useFilteredInvitations = (filters: {
     company?: string;
     status?: string;
@@ -338,10 +566,10 @@ export const useFilteredInvitations = (filters: {
         const matchesCompany = !filters.company || filters.company === 'All Companies' || invitation.company_name === filters.company;
         const matchesStatus = !filters.status || filters.status === 'All Status' || invitation.status === filters.status;
         const matchesSearch = !filters.search ||
-            invitation.company_name.toLowerCase().includes(filters.search.toLowerCase()) ||
-            invitation.vessel_name.toLowerCase().includes(filters.search.toLowerCase()) ||
+            invitation.email.toLowerCase().includes(filters.search.toLowerCase()) ||
             invitation.role_name.toLowerCase().includes(filters.search.toLowerCase()) ||
-            invitation.email.toLowerCase().includes(filters.search.toLowerCase());
+            invitation.company_name.toLowerCase().includes(filters.search.toLowerCase()) ||
+            invitation.vessel_name.toLowerCase().includes(filters.search.toLowerCase());
 
         return matchesCompany && matchesStatus && matchesSearch;
     }) || [];
@@ -350,14 +578,4 @@ export const useFilteredInvitations = (filters: {
         ...query,
         data: filteredInvitations,
     };
-};
-
-// Authentication check hook
-export const useAuthCheck = () => {
-    return useQuery({
-        queryKey: ['auth', 'check'],
-        queryFn: () => apiService.isAuthenticated(),
-        staleTime: 0,
-        refetchOnWindowFocus: false,
-    });
 };

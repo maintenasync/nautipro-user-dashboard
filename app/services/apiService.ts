@@ -1,13 +1,21 @@
 // app/services/apiService.ts
 import authService from './authService';
-import type { ApiResponse, Company, Vessel, CrewMember, License, Invitation } from '@/app/types/api';
+import type {
+    ApiResponse,
+    Company,
+    Vessel,
+    CrewMember,
+    License,
+    Invitation,
+    VesselType,
+    UserRole
+} from '@/app/types/api';
 
 const BASE_URL = 'https://auth.nautiproconnect.com/api/v1/web';
 
 class ApiService {
     private async request<T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>> {
         try {
-            // Get auth headers from existing authService
             const headers = authService.getAuthHeaders();
 
             const response = await fetch(`${BASE_URL}${endpoint}`, {
@@ -23,11 +31,6 @@ class ApiService {
             }
 
             const data: ApiResponse<T> = await response.json();
-
-            if (data.code !== 200) {
-                throw new Error(`API Error: ${data.code} ${data.status}`);
-            }
-
             return data;
         } catch (error) {
             console.error('API Request failed:', error);
@@ -35,13 +38,198 @@ class ApiService {
         }
     }
 
-    // Companies API
+    private async requestWithFormData<T>(endpoint: string, formData: FormData): Promise<ApiResponse<T>> {
+        try {
+            const authHeaders = authService.getAuthHeaders();
+            // Remove Content-Type for FormData - let browser set it with boundary
+            const { 'Content-Type': _, ...headers } = authHeaders;
+
+            const response = await fetch(`${BASE_URL}${endpoint}`, {
+                method: 'POST',
+                headers,
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            }
+
+            const data: ApiResponse<T> = await response.json();
+            return data;
+        } catch (error) {
+            console.error('API Request failed:', error);
+            throw error;
+        }
+    }
+
+    // ========== CREW MANAGEMENT API ==========
+
+    async getRoles(): Promise<ApiResponse<UserRole[]>> {
+        return this.request<UserRole[]>('/get-roles-vessel-member-maintena');
+    }
+
+    async updateVesselMember(data: {
+        vessel_id: string;
+        user_role_code: string;
+        user_id: string;
+        company_id: string;
+    }): Promise<ApiResponse<any>> {
+        return this.request<any>('/update-vessel-member-maintena', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+    }
+
+    async removeVesselMember(data: {
+        vessel_id: string;
+        user_role_code: string;
+        user_id: string;
+        company_id: string;
+    }): Promise<ApiResponse<any>> {
+        return this.request<any>('/update-vessel-member-maintena', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+    }
+
+    // ========== COMPANIES CRUD API ==========
+
+    async getVesselTypes(): Promise<ApiResponse<VesselType[]>> {
+        return this.request<VesselType[]>('/vessel-types');
+    }
+
+    async createCompany(data: {
+        name: string;
+        registration_number: string;
+        address: string;
+        city: string;
+        province: string;
+        postal_code: string;
+        country: string;
+        phone: string;
+        email: string;
+        website: string;
+    }): Promise<ApiResponse<Company>> {
+        return this.request<Company>('/create-company', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+    }
+
+    async updateCompanyLogo(companyId: string, logoFile: File): Promise<ApiResponse<any>> {
+        const formData = new FormData();
+        formData.append('logo', logoFile);
+
+        return this.requestWithFormData<any>(`/update-company-logo/${companyId}`, formData);
+    }
+
+    async updateCompany(companyId: string, data: {
+        name: string;
+        registration_number: string;
+        address: string;
+        city: string;
+        province: string;
+        postal_code: string;
+        country: string;
+        phone: string;
+        email: string;
+        website: string;
+    }): Promise<ApiResponse<Company>> {
+        return this.request<Company>(`/update-company/${companyId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+    }
+
+    async deleteCompany(companyId: string): Promise<ApiResponse<any>> {
+        return this.request<any>(`/delete-company/${companyId}`, {
+            method: 'DELETE',
+        });
+    }
+
+    // ========== VESSEL CRUD API ==========
+
+    async createVessel(data: {
+        name: string;
+        previous_name?: string;
+        imo: string;
+        mmsi: string;
+        flag: string;
+        callsign: string;
+        gross_tonnage: number;
+        summer_deadweight: number;
+        year_of_build: number;
+        place_of_build: string;
+        vesseltype_id: number;
+        class_name: string;
+        company_id: string;
+    }): Promise<ApiResponse<Vessel>> {
+        return this.request<Vessel>('/create-vessel', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+    }
+
+    async updateVesselImage(vesselId: string, imageFile: File): Promise<ApiResponse<any>> {
+        const formData = new FormData();
+        formData.append('image', imageFile);
+
+        return this.requestWithFormData<any>(`/update-image-vessel/${vesselId}`, formData);
+    }
+
+    async updateVessel(data: {
+        id: string;
+        name: string;
+        previous_name?: string;
+        imo: string;
+        mmsi: string;
+        flag: string;
+        callsign: string;
+        gross_tonnage: number;
+        summer_deadweight: number;
+        year_of_build: number;
+        place_of_build: string;
+        vesseltype_id: number;
+        class_name: string;
+        company_id: string;
+    }): Promise<ApiResponse<Vessel>> {
+        return this.request<Vessel>('/update-vessel', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+    }
+
+    async deleteVessel(vesselId: string): Promise<ApiResponse<any>> {
+        return this.request<any>(`/delete-vessel/${vesselId}`, {
+            method: 'DELETE',
+        });
+    }
+
+    // ========== EXISTING METHODS (Keep existing functionality) ==========
+
     async getCompanies(): Promise<ApiResponse<Company[]>> {
         return this.request<Company[]>('/companies');
     }
 
     async getCompany(id: string): Promise<ApiResponse<Company>> {
-        // If you have single company endpoint, use it. Otherwise, filter from getCompanies
         const companies = await this.getCompanies();
         const company = companies.data.find(c => c.id === id);
 
@@ -56,18 +244,10 @@ class ApiService {
         };
     }
 
-    // Vessels API
     async getVesselsByCompany(companyId: string): Promise<ApiResponse<Vessel[]>> {
         return this.request<Vessel[]>(`/get-vessels-by-company/${companyId}`);
     }
 
-    async getVessel(vesselId: string): Promise<ApiResponse<Vessel>> {
-        // You might need to add a single vessel endpoint, or derive from company vessels
-        // For now, throwing an error - implement based on your backend capability
-        throw new Error('Single vessel endpoint not implemented yet');
-    }
-
-    // Crews API
     async getCrewsByVessel(vesselId: string): Promise<ApiResponse<CrewMember[]>> {
         return this.request<CrewMember[]>(`/get-vessel-member-maintena-by-vessel/${vesselId}`);
     }
@@ -76,12 +256,10 @@ class ApiService {
         return this.request<CrewMember[]>(`/get-vessels-member-maintena-by-company/${companyId}`);
     }
 
-    // Licenses API
     async getLicenses(): Promise<ApiResponse<License[]>> {
         return this.request<License[]>('/get-license-maintena');
     }
 
-    // Invitations API
     async getInvitations(): Promise<ApiResponse<Invitation[]>> {
         return this.request<Invitation[]>('/get-invitations-vessel-member-maintena');
     }
@@ -94,30 +272,6 @@ class ApiService {
         return this.request<any>(`/reject-invitation-vessel-member-maintena/${invitationId}`);
     }
 
-    // Utility method to get all crews (if needed for crew management page)
-    async getAllCrews(): Promise<ApiResponse<CrewMember[]>> {
-        // This would need to be implemented based on your requirements
-        // You might need to get all companies first, then their crews
-        const companies = await this.getCompanies();
-        const allCrews: CrewMember[] = [];
-
-        for (const company of companies.data) {
-            try {
-                const crews = await this.getCrewsByCompany(company.id);
-                allCrews.push(...crews.data);
-            } catch (error) {
-                console.warn(`Failed to fetch crews for company ${company.id}:`, error);
-            }
-        }
-
-        return {
-            code: 200,
-            status: 'OK',
-            data: allCrews
-        };
-    }
-
-    // Helper method to check if user is authenticated
     isAuthenticated(): boolean {
         try {
             authService.getAuthHeaders();

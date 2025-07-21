@@ -25,12 +25,21 @@ export interface Company {
     logo?: string;
 }
 
-// Vessel Interfaces
+// Vessel Type Interface (NEW)
 export interface VesselType {
     id: number;
     name: string;
 }
 
+// User Role Interface (NEW)
+export interface UserRole {
+    id: number;
+    role_code: string;
+    name: string;
+    description: string;
+}
+
+// Vessel Interfaces
 export interface VesselClass {
     id: number;
     name: string;
@@ -64,13 +73,6 @@ export interface Vessel {
 }
 
 // Crew/User Interfaces
-export interface UserRole {
-    id: number;
-    role_code: string;
-    name: string;
-    description: string;
-}
-
 export interface User {
     id: string;
     username: string;
@@ -127,7 +129,7 @@ export interface License {
     role: UserRole;
 }
 
-// For UI Components (transformed data)
+// For UI Components (transformed data) - CORRECTED VERSIONS
 export interface CompanyUI {
     id: string;
     name: string;
@@ -159,6 +161,7 @@ export interface CrewMemberUI {
     avatar?: string;
 }
 
+// CORRECTED LicenseUI - matching what's actually used in components
 export interface LicenseUI {
     id: string;
     license_code: string;
@@ -173,6 +176,7 @@ export interface LicenseUI {
     company_location: string;
 }
 
+// CORRECTED InvitationUI - matching what's actually used in components
 export interface InvitationUI {
     id: number;
     company_name: string;
@@ -186,4 +190,212 @@ export interface InvitationUI {
     expired_date: string;
     days_remaining: number;
     is_expired: boolean;
+}
+
+// Request/Response Types for API calls
+
+// Company Create/Update Request
+export interface CompanyCreateRequest {
+    name: string;
+    registration_number: string;
+    address: string;
+    city: string;
+    province: string;
+    postal_code: string;
+    country: string;
+    phone: string;
+    email: string;
+    website: string;
+}
+
+// Vessel Create/Update Request
+export interface VesselCreateRequest {
+    name: string;
+    previous_name?: string;
+    imo: string;
+    mmsi: string;
+    flag: string;
+    callsign: string;
+    gross_tonnage: number;
+    summer_deadweight: number;
+    year_of_build: number;
+    place_of_build: string;
+    vesseltype_id: number;
+    class_name: string;
+    company_id: string;
+}
+
+export interface VesselUpdateRequest extends VesselCreateRequest {
+    id: string;
+}
+
+// Crew Update/Remove Request
+export interface CrewUpdateRequest {
+    vessel_id: string;
+    user_role_code: string;
+    user_id: string;
+    company_id: string;
+}
+
+// Form Data Types for UI Components
+export interface CompanyFormData {
+    name: string;
+    registration_number: string;
+    address: string;
+    city: string;
+    province: string;
+    postal_code: string;
+    country: string;
+    phone: string;
+    email: string;
+    website: string;
+    logo?: File;
+}
+
+export interface VesselFormData {
+    name: string;
+    previous_name: string;
+    imo: string;
+    mmsi: string;
+    flag: string;
+    callsign: string;
+    gross_tonnage: string;
+    summer_deadweight: string;
+    year_of_build: string;
+    place_of_build: string;
+    vesseltype_id: string;
+    class_name: string;
+    company_id: string;
+    image?: File;
+}
+
+// Filter Types
+export interface CrewFilters {
+    vessel?: string;
+    role?: string;
+    status?: string;
+    search?: string;
+}
+
+export interface VesselFilters {
+    company?: string;
+    type?: string;
+    status?: string;
+    search?: string;
+}
+
+export interface LicenseFilters {
+    company?: string;
+    vessel?: string;
+    status?: string;
+    search?: string;
+}
+
+export interface InvitationFilters {
+    company?: string;
+    status?: string;
+    search?: string;
+}
+
+// Utility Types
+export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
+
+export interface PaginationMeta {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+}
+
+export interface PaginatedResponse<T> extends ApiResponse<T[]> {
+    meta: PaginationMeta;
+}
+
+// Error Types
+export interface ApiError {
+    code: number;
+    status: string;
+    message: string;
+    errors?: Record<string, string[]>;
+}
+
+// Upload Response Types
+export interface FileUploadResponse {
+    url: string;
+    filename: string;
+    size: number;
+    type: string;
+}
+
+// Statistics/Dashboard Types
+export interface DashboardStats {
+    total_companies: number;
+    total_vessels: number;
+    total_crew: number;
+    active_licenses: number;
+    pending_invitations: number;
+    expiring_licenses: number;
+}
+
+// Chart Data Types for Dashboard
+export interface ChartDataPoint {
+    name: string;
+    value: number;
+    color?: string;
+}
+
+export interface TimeSeriesDataPoint {
+    date: string;
+    value: number;
+    label?: string;
+}
+
+// Theme Types
+export type Theme = 'light' | 'dark' | 'auto';
+
+// Navigation Types
+export interface MenuItem {
+    id: string;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    path: string;
+    badge?: number;
+    active?: boolean;
+}
+
+// Modal/Dialog Types
+export interface DialogProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onSuccess?: () => void;
+}
+
+export interface ConfirmDialogProps extends DialogProps {
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText?: string;
+    cancelText?: string;
+    variant?: 'danger' | 'warning' | 'info';
+}
+
+// Table Types
+export interface TableColumn<T = any> {
+    key: keyof T;
+    label: string;
+    sortable?: boolean;
+    render?: (value: any, row: T) => React.ReactNode;
+    width?: string;
+    align?: 'left' | 'center' | 'right';
+}
+
+export interface TableProps<T = any> {
+    data: T[];
+    columns: TableColumn<T>[];
+    loading?: boolean;
+    error?: string;
+    onSort?: (key: keyof T, direction: 'asc' | 'desc') => void;
+    sortKey?: keyof T;
+    sortDirection?: 'asc' | 'desc';
+    emptyMessage?: string;
 }
