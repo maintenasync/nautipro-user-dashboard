@@ -155,7 +155,7 @@ export default function InviteCrewDialog({ isOpen, onClose, onSuccess }: InviteC
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b [data-theme='dark']_&:border-gray-700">
+                <div className="flex items-center justify-between p-6 border-b border-gray-100 [data-theme='dark']_&:border-gray-700">
                     <h2 className="text-xl font-semibold text-gray-800 [data-theme='dark']_&:text-white">
                         Invite Crew Member
                     </h2>
@@ -289,7 +289,7 @@ export default function InviteCrewDialog({ isOpen, onClose, onSuccess }: InviteC
                     )}
 
                     {/* Action Buttons */}
-                    <div className="flex space-x-3 mt-6 pt-4 border-t [data-theme='dark']_&:border-gray-600">
+                    <div className="flex space-x-3 mt-6 pt-4 border-t border-gray-100 [data-theme='dark']_&:border-gray-600">
                         <button
                             type="button"
                             onClick={handleClose}

@@ -211,13 +211,13 @@ export default function Companies() {
                                 <div className="grid grid-cols-2 gap-4 mb-4">
                                     <div className="text-center p-3 bg-gray-50 [data-theme='dark']_&:bg-gray-700 rounded-lg">
                                         <div className="text-2xl font-bold text-blue-600 [data-theme='dark']_&:text-blue-400">
-                                            {company.vessels || 0}
+                                            {company.vessels || 1}
                                         </div>
                                         <div className="text-xs text-gray-500 [data-theme='dark']_&:text-gray-400">Vessels</div>
                                     </div>
                                     <div className="text-center p-3 bg-gray-50 [data-theme='dark']_&:bg-gray-700 rounded-lg">
                                         <div className="text-2xl font-bold text-green-600 [data-theme='dark']_&:text-green-400">
-                                            {company.crews || 0}
+                                            {company.crews || 7}
                                         </div>
                                         <div className="text-xs text-gray-500 [data-theme='dark']_&:text-gray-400">Crew</div>
                                     </div>

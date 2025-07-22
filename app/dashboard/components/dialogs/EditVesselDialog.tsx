@@ -279,7 +279,7 @@ export default function EditVesselDialog({ isOpen, vessel, onClose, onSuccess }:
         <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white [data-theme='dark']_&:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b [data-theme='dark']_&:border-gray-700">
+                <div className="flex items-center justify-between p-6 border-b border-gray-100 [data-theme='dark']_&:border-gray-700">
                     <h2 className="text-xl font-semibold text-gray-800 [data-theme='dark']_&:text-white">
                         Edit Vessel
                     </h2>
@@ -603,7 +603,7 @@ export default function EditVesselDialog({ isOpen, vessel, onClose, onSuccess }:
                     )}
 
                     {/* Actions */}
-                    <div className="flex space-x-3 pt-4 border-t [data-theme='dark']_&:border-gray-700">
+                    <div className="flex space-x-3 pt-4 border-t border-gray-100 [data-theme='dark']_&:border-gray-700">
                         <button
                             type="button"
                             onClick={handleClose}

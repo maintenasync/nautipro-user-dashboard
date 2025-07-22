@@ -94,7 +94,7 @@ export default function UpdateCrewDialog({
         <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white [data-theme='dark']_&:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b [data-theme='dark']_&:border-gray-700">
+                <div className="flex items-center justify-between p-6 border-b border-gray-100 [data-theme='dark']_&:border-gray-700">
                     <h2 className="text-xl font-semibold text-gray-800 [data-theme='dark']_&:text-white">
                         Update Crew Member
                     </h2>
