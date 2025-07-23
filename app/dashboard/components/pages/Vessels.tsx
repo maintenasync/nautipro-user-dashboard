@@ -1,4 +1,4 @@
-// app/dashboard/components/pages/Vessels.tsx - Updated with full CRUD
+// app/dashboard/components/pages/Vessels.tsx - Modified for role-based access
 
 'use client';
 
@@ -7,51 +7,57 @@ import CreateVesselDialog from '../dialogs/CreateVesselDialog';
 import EditVesselDialog from '../dialogs/EditVesselDialog';
 import VesselDetailDialog from '../dialogs/VesselDetailDialog';
 import ConfirmDeleteDialog from '../dialogs/ConfirmDeleteDialog';
-import { useAllVessels, useDeleteVessel, useCompanies } from '@/app/hooks/useApiQuery';
+import { useAllVessels, useDeleteVessel } from '@/app/hooks/useApiQuery';
+import { useAuth } from '@/app/contexts/AuthContext'; // Import useAuth
 import type { VesselUI } from '@/app/types/api';
 
 export default function Vessels() {
+    const { state: authState } = useAuth(); // Get auth state
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [selectedVesselId, setSelectedVesselId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [companyFilter, setCompanyFilter] = useState('All Companies');
-    const [typeFilter, setTypeFilter] = useState('All Types');
-    const [statusFilter, setStatusFilter] = useState('All Status');
+    const [companyFilter, setCompanyFilter] = useState('');
+    const [typeFilter, setTypeFilter] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
 
-    // Fetch data
-    const { data: vessels = [], isLoading, error, refetch } = useAllVessels();
-    const { data: companies = [] } = useCompanies();
+    // Fetch vessels data
+    const { data: vesselsData, isLoading, error, refetch } = useAllVessels();
     const deleteVesselMutation = useDeleteVessel();
 
-    // Get filter options
-    const availableCompanies = ['All Companies', ...Array.from(new Set(vessels.map(v => v.company)))];
-    const availableTypes = ['All Types', ...Array.from(new Set(vessels.map(v => v.type)))];
-    const availableStatuses = ['All Status', 'Active', 'Inactive'];
+    // Check if current user is superintendent
+    const isSuperintendent = authState.user?.role?.toLowerCase() === 'superintendent';
 
     // Filter vessels
-    const filteredVessels = vessels.filter(vessel => {
-        const matchesSearch =
+    const filteredVessels = vesselsData?.filter(vessel => {
+        const matchesSearch = !searchTerm ||
             vessel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             vessel.imo.toLowerCase().includes(searchTerm.toLowerCase()) ||
             vessel.company.toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchesCompany = companyFilter === 'All Companies' || vessel.company === companyFilter;
-        const matchesType = typeFilter === 'All Types' || vessel.type === typeFilter;
-        const matchesStatus = statusFilter === 'All Status' || vessel.status === statusFilter;
+        const matchesCompany = !companyFilter || companyFilter === 'All Companies' || vessel.company === companyFilter;
+        const matchesType = !typeFilter || typeFilter === 'All Types' || vessel.type === typeFilter;
+        const matchesStatus = !statusFilter || statusFilter === 'All Status' || vessel.status === statusFilter;
 
         return matchesSearch && matchesCompany && matchesType && matchesStatus;
-    });
+    }) || [];
 
-    const selectedVessel = vessels.find(v => v.id === selectedVesselId) || null;
+    // Get unique values for filters
+    const availableCompanies = ['All Companies', ...new Set(vesselsData?.map(v => v.company) || [])];
+    const availableTypes = ['All Types', ...new Set(vesselsData?.map(v => v.type) || [])];
+    const availableStatuses = ['All Status', ...new Set(vesselsData?.map(v => v.status) || [])];
+
+    const selectedVessel = vesselsData?.find(v => v.id === selectedVesselId) || null;
 
     const handleCreateVessel = () => {
+        if (!isSuperintendent) return; // Block if not superintendent
         setIsCreateDialogOpen(true);
     };
 
     const handleEditVessel = (vesselId: string) => {
+        if (!isSuperintendent) return; // Block if not superintendent
         setSelectedVesselId(vesselId);
         setIsEditDialogOpen(true);
     };
@@ -62,21 +68,16 @@ export default function Vessels() {
     };
 
     const handleDeleteVessel = (vesselId: string) => {
+        if (!isSuperintendent) return; // Block if not superintendent
         setSelectedVesselId(vesselId);
         setIsDeleteDialogOpen(true);
     };
 
     const handleConfirmDelete = async () => {
-        if (!selectedVesselId) return;
-
-        try {
+        if (selectedVesselId) {
             await deleteVesselMutation.mutateAsync(selectedVesselId);
-            setIsDeleteDialogOpen(false);
-            setSelectedVesselId(null);
+            handleCloseDialogs();
             refetch();
-        } catch (error: any) {
-            // Error is handled by the mutation - will be shown in the dialog
-            console.error('Delete failed:', error);
         }
     };
 
@@ -93,28 +94,19 @@ export default function Vessels() {
         handleCloseDialogs();
     };
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'Active':
-                return 'bg-green-100 text-green-800 [data-theme=\'dark\']_&:bg-green-900 [data-theme=\'dark\']_&:text-green-300';
-            case 'Inactive':
-                return 'bg-red-100 text-red-800 [data-theme=\'dark\']_&:bg-red-900 [data-theme=\'dark\']_&:text-red-300';
-            default:
-                return 'bg-gray-100 text-gray-800 [data-theme=\'dark\']_&:bg-gray-700 [data-theme=\'dark\']_&:text-gray-300';
-        }
-    };
-
     if (error) {
         return (
             <div className="p-6">
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded [data-theme='dark']_&:bg-red-900 [data-theme='dark']_&:border-red-700 [data-theme='dark']_&:text-red-300">
-                    Error loading vessels: {error.message}
-                    <button
-                        onClick={() => refetch()}
-                        className="ml-2 underline hover:no-underline"
-                    >
-                        Try again
-                    </button>
+                <div className="bg-red-50 [data-theme='dark']_&:bg-red-900 rounded-lg p-4">
+                    <div className="flex">
+                        <svg className="h-5 w-5 text-red-400 [data-theme='dark']_&:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-red-800 [data-theme='dark']_&:text-red-200">Error loading vessels</h3>
+                            <p className="text-sm text-red-700 [data-theme='dark']_&:text-red-300 mt-1">{error.message}</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -125,22 +117,21 @@ export default function Vessels() {
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800 [data-theme='dark']_&:text-white">
-                        Vessels
-                    </h1>
-                    <p className="text-gray-600 [data-theme='dark']_&:text-gray-300">
-                        Manage your fleet of vessels and their specifications
-                    </p>
+                    <h1 className="text-2xl font-bold text-gray-800 [data-theme='dark']_&:text-white">Vessels</h1>
+                    <p className="text-gray-600 [data-theme='dark']_&:text-gray-400 mt-1">Manage your fleet of vessels</p>
                 </div>
-                <button
-                    onClick={handleCreateVessel}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    <span>Add Vessel</span>
-                </button>
+                {/* Only show Add Vessel button for superintendent */}
+                {isSuperintendent && (
+                    <button
+                        onClick={handleCreateVessel}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-150 flex items-center space-x-2"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        <span>Add Vessel</span>
+                    </button>
+                )}
             </div>
 
             {/* Filters */}
@@ -170,9 +161,7 @@ export default function Vessels() {
                             className="w-full p-2 border border-gray-300 rounded-md [data-theme='dark']_&:border-gray-600 [data-theme='dark']_&:bg-gray-700 [data-theme='dark']_&:text-white"
                         >
                             {availableCompanies.map(company => (
-                                <option key={company} value={company}>
-                                    {company}
-                                </option>
+                                <option key={company} value={company}>{company}</option>
                             ))}
                         </select>
                     </div>
@@ -185,9 +174,7 @@ export default function Vessels() {
                             className="w-full p-2 border border-gray-300 rounded-md [data-theme='dark']_&:border-gray-600 [data-theme='dark']_&:bg-gray-700 [data-theme='dark']_&:text-white"
                         >
                             {availableTypes.map(type => (
-                                <option key={type} value={type}>
-                                    {type}
-                                </option>
+                                <option key={type} value={type}>{type}</option>
                             ))}
                         </select>
                     </div>
@@ -200,66 +187,49 @@ export default function Vessels() {
                             className="w-full p-2 border border-gray-300 rounded-md [data-theme='dark']_&:border-gray-600 [data-theme='dark']_&:bg-gray-700 [data-theme='dark']_&:text-white"
                         >
                             {availableStatuses.map(status => (
-                                <option key={status} value={status}>
-                                    {status}
-                                </option>
+                                <option key={status} value={status}>{status}</option>
                             ))}
                         </select>
                     </div>
                 </div>
 
-                {/* Filter Summary */}
-                <div className="mt-3 flex items-center justify-between text-sm text-gray-500 [data-theme='dark']_&:text-gray-400">
-                    <div>
-                        {isLoading ? 'Loading...' : `${filteredVessels.length} vessels`}
-                        {filteredVessels.length !== vessels.length && ` of ${vessels.length} total`}
-                    </div>
-                    {(searchTerm || companyFilter !== 'All Companies' || typeFilter !== 'All Types' || statusFilter !== 'All Status') && (
-                        <button
-                            onClick={() => {
-                                setSearchTerm('');
-                                setCompanyFilter('All Companies');
-                                setTypeFilter('All Types');
-                                setStatusFilter('All Status');
-                            }}
-                            className="text-blue-600 hover:text-blue-800 [data-theme='dark']_&:text-blue-400 [data-theme='dark']_&:hover:text-blue-300"
-                        >
-                            Clear filters
-                        </button>
-                    )}
+                <div className="mt-4 text-sm text-gray-500 [data-theme='dark']_&:text-gray-400">
+                    {isLoading ? 'Loading...' : `${filteredVessels.length} vessels found`}
                 </div>
             </div>
 
             {/* Vessels Grid */}
             {isLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[...Array(6)].map((_, index) => (
-                        <div key={index} className="bg-white [data-theme='dark']_&:bg-gray-800 rounded-lg shadow animate-pulse">
-                            <div className="aspect-video bg-gray-200 [data-theme='dark']_&:bg-gray-600 rounded-t-lg"></div>
-                            <div className="p-4">
-                                <div className="h-4 bg-gray-200 [data-theme='dark']_&:bg-gray-600 rounded mb-2"></div>
-                                <div className="h-3 bg-gray-200 [data-theme='dark']_&:bg-gray-600 rounded mb-4"></div>
-                                <div className="flex justify-between">
-                                    <div className="h-3 bg-gray-200 [data-theme='dark']_&:bg-gray-600 rounded w-1/3"></div>
-                                    <div className="h-3 bg-gray-200 [data-theme='dark']_&:bg-gray-600 rounded w-1/4"></div>
+                    {[...Array(6)].map((_, i) => (
+                        <div key={i} className="bg-white [data-theme='dark']_&:bg-gray-800 rounded-lg shadow p-6">
+                            <div className="animate-pulse">
+                                <div className="h-40 bg-gray-300 rounded-md mb-4 [data-theme='dark']_&:bg-gray-600"></div>
+                                <div className="space-y-2">
+                                    <div className="h-4 bg-gray-300 rounded w-3/4 [data-theme='dark']_&:bg-gray-600"></div>
+                                    <div className="h-3 bg-gray-300 rounded w-1/2 [data-theme='dark']_&:bg-gray-600"></div>
+                                </div>
+                                <div className="mt-4 space-y-2">
+                                    <div className="h-3 bg-gray-300 rounded [data-theme='dark']_&:bg-gray-600"></div>
+                                    <div className="h-3 bg-gray-300 rounded w-2/3 [data-theme='dark']_&:bg-gray-600"></div>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
             ) : filteredVessels.length === 0 ? (
-                <div className="bg-white [data-theme='dark']_&:bg-gray-800 rounded-lg shadow p-8 text-center">
+                <div className="text-center py-12">
                     <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                     </svg>
-                    <h3 className="mt-2 text-sm font-medium text-gray-900 [data-theme='dark']_&:text-white">No vessels found</h3>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900 [data-theme='dark']_&:text-gray-100">No vessels found</h3>
                     <p className="mt-1 text-sm text-gray-500 [data-theme='dark']_&:text-gray-400">
-                        {searchTerm || companyFilter !== 'All Companies' || typeFilter !== 'All Types' || statusFilter !== 'All Status'
-                            ? 'Try adjusting your filters to find vessels.'
-                            : 'Get started by adding your first vessel to the fleet.'
+                        {searchTerm || companyFilter || typeFilter || statusFilter
+                            ? 'Try adjusting your filters to see more vessels.'
+                            : 'Get started by adding your first vessel.'
                         }
                     </p>
-                    {!(searchTerm || companyFilter !== 'All Companies' || typeFilter !== 'All Types' || statusFilter !== 'All Status') && (
+                    {!searchTerm && !companyFilter && !typeFilter && !statusFilter && isSuperintendent && (
                         <div className="mt-6">
                             <button
                                 onClick={handleCreateVessel}
@@ -278,35 +248,35 @@ export default function Vessels() {
                     {filteredVessels.map((vessel) => (
                         <div key={vessel.id} className="bg-white [data-theme='dark']_&:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
                             {/* Vessel Image */}
-                            <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden [data-theme='dark']_&:bg-gray-700">
-                                {vessel.image ? (
+                            {vessel.image && (
+                                <div className="aspect-w-16 aspect-h-9">
                                     <img
                                         src={vessel.image}
                                         alt={vessel.name}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-40 object-cover rounded-t-lg"
                                     />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
 
-                            <div className="p-4">
+                            <div className="p-6">
                                 {/* Vessel Header */}
-                                <div className="flex justify-between items-start mb-2">
-                                    <h3 className="text-lg font-semibold text-gray-800 [data-theme='dark']_&:text-white truncate">
+                                <div className="mb-4">
+                                    <h3 className="text-lg font-semibold text-gray-800 [data-theme='dark']_&:text-white mb-1">
                                         {vessel.name}
                                     </h3>
-                                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(vessel.status)}`}>
-                                        {vessel.status}
-                                    </span>
+                                    <div className="flex items-center space-x-2">
+                                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                            vessel.status === 'Active'
+                                                ? 'bg-green-100 text-green-800 [data-theme=\'dark\']_&:bg-green-800 [data-theme=\'dark\']_&:text-green-200'
+                                                : 'bg-red-100 text-red-800 [data-theme=\'dark\']_&:bg-red-800 [data-theme=\'dark\']_&:text-red-200'
+                                        }`}>
+                                            {vessel.status}
+                                        </span>
+                                    </div>
                                 </div>
 
-                                {/* Vessel Info */}
-                                <div className="space-y-1 mb-4 text-sm text-gray-600 [data-theme='dark']_&:text-gray-400">
+                                {/* Vessel Details */}
+                                <div className="space-y-2 text-sm mb-4">
                                     <div className="flex justify-between">
                                         <span>Type:</span>
                                         <span className="font-medium">{vessel.type}</span>
@@ -329,18 +299,24 @@ export default function Vessels() {
                                     >
                                         Details
                                     </button>
-                                    <button
-                                        onClick={() => handleEditVessel(vessel.id)}
-                                        className="px-3 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 text-sm [data-theme='dark']_&:bg-blue-900 [data-theme='dark']_&:text-blue-300 [data-theme='dark']_&:hover:bg-blue-800"
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        onClick={() => handleDeleteVessel(vessel.id)}
-                                        className="px-3 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 text-sm [data-theme='dark']_&:bg-red-900 [data-theme='dark']_&:text-red-300 [data-theme='dark']_&:hover:bg-red-800"
-                                    >
-                                        Delete
-                                    </button>
+                                    {/* Only show Edit button for superintendent */}
+                                    {isSuperintendent && (
+                                        <button
+                                            onClick={() => handleEditVessel(vessel.id)}
+                                            className="px-3 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 text-sm [data-theme='dark']_&:bg-blue-900 [data-theme='dark']_&:text-blue-300 [data-theme='dark']_&:hover:bg-blue-800"
+                                        >
+                                            Edit
+                                        </button>
+                                    )}
+                                    {/* Only show Delete button for superintendent */}
+                                    {isSuperintendent && (
+                                        <button
+                                            onClick={() => handleDeleteVessel(vessel.id)}
+                                            className="px-3 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 text-sm [data-theme='dark']_&:bg-red-900 [data-theme='dark']_&:text-red-300 [data-theme='dark']_&:hover:bg-red-800"
+                                        >
+                                            Delete
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -348,42 +324,50 @@ export default function Vessels() {
                 </div>
             )}
 
-            {/* Dialogs */}
-            <CreateVesselDialog
-                isOpen={isCreateDialogOpen}
-                onClose={handleCloseDialogs}
-                onSuccess={handleSuccess}
-            />
+            {/* Dialogs - Only render if user is superintendent */}
+            {isSuperintendent && (
+                <>
+                    <CreateVesselDialog
+                        isOpen={isCreateDialogOpen}
+                        onClose={handleCloseDialogs}
+                        onSuccess={handleSuccess}
+                    />
 
-            <EditVesselDialog
-                isOpen={isEditDialogOpen}
-                vessel={selectedVessel}
-                onClose={handleCloseDialogs}
-                onSuccess={handleSuccess}
-            />
+                    <EditVesselDialog
+                        isOpen={isEditDialogOpen}
+                        vessel={selectedVessel}
+                        onClose={handleCloseDialogs}
+                        onSuccess={handleSuccess}
+                    />
+
+                    <ConfirmDeleteDialog
+                        isOpen={isDeleteDialogOpen}
+                        title="Delete Vessel"
+                        message={`Are you sure you want to delete "${selectedVessel?.name}"? This action cannot be undone and will affect all associated crew members and licenses.`}
+                        onConfirm={handleConfirmDelete}
+                        onCancel={handleCloseDialogs}
+                        isLoading={deleteVesselMutation.isPending}
+                        error={deleteVesselMutation.error?.message}
+                    />
+                </>
+            )}
 
             <VesselDetailDialog
                 isOpen={isDetailDialogOpen}
                 vesselId={selectedVesselId}
                 onClose={handleCloseDialogs}
                 onEdit={(vesselId) => {
-                    setIsDetailDialogOpen(false);
-                    handleEditVessel(vesselId);
+                    if (isSuperintendent) {
+                        setIsDetailDialogOpen(false);
+                        handleEditVessel(vesselId);
+                    }
                 }}
                 onDelete={(vesselId) => {
-                    setIsDetailDialogOpen(false);
-                    handleDeleteVessel(vesselId);
+                    if (isSuperintendent) {
+                        setIsDetailDialogOpen(false);
+                        handleDeleteVessel(vesselId);
+                    }
                 }}
-            />
-
-            <ConfirmDeleteDialog
-                isOpen={isDeleteDialogOpen}
-                title="Delete Vessel"
-                message={`Are you sure you want to delete "${selectedVessel?.name}"? This action cannot be undone and will affect all associated crew members and licenses.`}
-                onConfirm={handleConfirmDelete}
-                onCancel={handleCloseDialogs}
-                isLoading={deleteVesselMutation.isPending}
-                error={deleteVesselMutation.error?.message}
             />
         </div>
     );

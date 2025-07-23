@@ -5,12 +5,12 @@
 import { useState } from 'react';
 
 interface VesselDetailProps {
-    vesselId: number;
+    vesselId: string;
     onBack: () => void;
 }
 
 interface VesselDetails {
-    id: number;
+    id: string;
     name: string;
     previousName: string;
     imo: string;

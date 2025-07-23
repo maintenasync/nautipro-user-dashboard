@@ -1,9 +1,16 @@
-// app/dashboard/components/layout/TopBar.tsx
+// app/dashboard/components/layout/TopBar.tsx - QUICK MOBILE FIX
 
-import {BellIcon, UserIcon } from '../icons/Icons';
+import { BellIcon, UserIcon } from '../icons/Icons';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useSafeTheme } from '@/app/hooks/useSafeTheme';
 import { useState } from 'react';
+
+// TAMBAHAN: MenuIcon untuk mobile menu button
+const MenuIcon = ({ className }: { className?: string }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+);
 
 interface MenuItem {
     id: string;
@@ -19,10 +26,18 @@ interface TopBarProps {
     setSidebarOpen?: (open: boolean) => void;
 }
 
-export default function TopBar({ menuItems, activeMenuItem , sidebarOpen, setSidebarOpen}: TopBarProps) {
+export default function TopBar({
+                                   menuItems,
+                                   activeMenuItem,
+                                   sidebarOpen,
+                                   setSidebarOpen
+                               }: TopBarProps) {
     const { state, logout } = useAuth();
     const { theme, setTheme, mounted } = useSafeTheme();
     const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
+
+    // Get active menu label for title
+    const activeMenuLabel = menuItems.find(item => item.id === activeMenuItem)?.label || 'Dashboard';
 
     const handleLogout = () => {
         logout();
@@ -58,166 +73,134 @@ export default function TopBar({ menuItems, activeMenuItem , sidebarOpen, setSid
         },
     ];
 
-    const currentTheme = themes.find(t => t.value === theme) || themes[2];
-
-    const handleThemeChange = (newTheme: 'light' | 'dark' | 'auto') => {
-        if (mounted) {
-            setTheme(newTheme);
-            setIsThemeMenuOpen(false);
-        }
-    };
+    if (!mounted) return null;
 
     return (
-        <header className="bg-white shadow-sm border-b border-gray-100 px-6 py-4 [data-theme='dark']_&:bg-gray-900 [data-theme='dark']_&:border-gray-700 transition-colors duration-300">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                    <h2 className="text-xl font-semibold text-gray-800 [data-theme='dark']_&:text-white">
-                        {menuItems.find(item => item.id === activeMenuItem)?.label}
-                    </h2>
-                </div>
+        <header className="bg-white [data-theme='dark']_&:bg-gray-800 border-b border-gray-100 [data-theme='dark']_&:border-gray-700 shadow-sm z-30">
+            <div className="px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center h-16">
+                    {/* LEFT SECTION - Mobile Menu + Title */}
+                    <div className="flex items-center space-x-4">
+                        {/* MOBILE MENU BUTTON - CRITICAL FIX */}
+                        <button
+                            onClick={() => setSidebarOpen?.(!sidebarOpen)}
+                            className="lg:hidden p-2 rounded-md text-gray-600 [data-theme='dark']_&:text-gray-400 hover:bg-gray-100 [data-theme='dark']_&:hover:bg-gray-700 transition-colors"
+                            aria-label="Toggle navigation menu"
+                        >
+                            <MenuIcon className="w-6 h-6" />
+                        </button>
 
-                <div className="flex items-center space-x-4">
-                    {/* Search */}
-                    {/*<div className="relative">*/}
-                    {/*    <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />*/}
-                    {/*    <input*/}
-                    {/*        type="text"*/}
-                    {/*        placeholder="Search..."*/}
-                    {/*        className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"*/}
-                    {/*    />*/}
-                    {/*</div>*/}
+                        {/* PAGE TITLE */}
+                        <div>
+                            <h1 className="text-lg sm:text-xl font-semibold text-gray-800 [data-theme='dark']_&:text-white">
+                                {activeMenuLabel}
+                            </h1>
+                        </div>
+                    </div>
 
-                    {/* Theme Toggle */}
-                    {mounted && (
+                    {/* RIGHT SECTION - Theme, Notifications, User */}
+                    <div className="flex items-center space-x-2 sm:space-x-4">
+                        {/* THEME SELECTOR */}
                         <div className="relative">
                             <button
                                 onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
-                                className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors duration-150 flex items-center space-x-2 [data-theme='dark']_&:border-gray-600 [data-theme='dark']_&:hover:bg-gray-700 [data-theme='dark']_&:bg-gray-800"
-                                aria-label="Toggle theme"
+                                className="p-2 rounded-md text-gray-600 [data-theme='dark']_&:text-gray-400 hover:bg-gray-100 [data-theme='dark']_&:hover:bg-gray-700 transition-colors"
+                                aria-label="Change theme"
                             >
-                                <span className="text-gray-600 [data-theme='dark']_&:text-gray-300">
-                                    {currentTheme.icon}
-                                </span>
-                                <span className="text-sm font-medium text-gray-700 [data-theme='dark']_&:text-gray-200 hidden sm:inline">
-                                    {currentTheme.label}
-                                </span>
-                                <svg
-                                    className={`w-4 h-4 text-gray-400 transition-transform duration-150 ${isThemeMenuOpen ? 'rotate-180' : ''}`}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
+                                {themes.find(t => t.value === theme)?.icon || themes[0].icon}
                             </button>
 
-                            {/* Theme Dropdown Menu */}
+                            {/* Theme Dropdown */}
                             {isThemeMenuOpen && (
                                 <>
-                                    {/* Backdrop */}
                                     <div
                                         className="fixed inset-0 z-10"
                                         onClick={() => setIsThemeMenuOpen(false)}
                                     />
-
-                                    {/* Menu */}
-                                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 [data-theme='dark']_&:bg-gray-800 [data-theme='dark']_&:border-gray-600">
-                                        <div className="py-1">
-                                            {themes.map((themeOption) => (
-                                                <button
-                                                    key={themeOption.value}
-                                                    onClick={() => handleThemeChange(themeOption.value)}
-                                                    className={`w-full px-4 py-2 text-left flex items-center space-x-3 hover:bg-gray-50 transition-colors duration-150 [data-theme='dark']_&:hover:bg-gray-700 ${
-                                                        theme === themeOption.value
-                                                            ? 'bg-blue-50 text-blue-600 [data-theme=\'dark\']_&:bg-blue-900 [data-theme=\'dark\']_&:text-blue-300'
-                                                            : 'text-gray-700 [data-theme=\'dark\']_&:text-gray-200'
-                                                    }`}
-                                                >
-                                                    <span className="flex-shrink-0">
-                                                        {themeOption.icon}
-                                                    </span>
-                                                    <span className="text-sm font-medium">
-                                                        {themeOption.label}
-                                                    </span>
-                                                    {theme === themeOption.value && (
-                                                        <svg className="w-4 h-4 ml-auto text-blue-600 [data-theme='dark']_&:text-blue-300" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                        </svg>
-                                                    )}
-                                                </button>
-                                            ))}
-                                        </div>
-
-                                        {/* Info */}
-                                        <div className="border-t border-gray-200 [data-theme='dark']_&:border-gray-600 px-4 py-3">
-                                            <p className="text-xs text-gray-500 [data-theme='dark']_&:text-gray-400">
-                                                {theme === 'auto'
-                                                    ? 'Following system preference'
-                                                    : `Using ${theme} mode`
-                                                }
-                                            </p>
-                                        </div>
+                                    <div className="absolute right-0 mt-2 w-32 bg-white [data-theme='dark']_&:bg-gray-800 rounded-md border border-gray-100 [data-theme='dark']_&:border-gray-600 shadow-lg py-1 z-20">
+                                        {themes.map((themeOption) => (
+                                            <button
+                                                key={themeOption.value}
+                                                onClick={() => {
+                                                    setTheme(themeOption.value);
+                                                    setIsThemeMenuOpen(false);
+                                                }}
+                                                className={`w-full flex items-center px-3 py-2 text-sm text-left hover:bg-gray-100 [data-theme='dark']_&:hover:bg-gray-700 transition-colors ${
+                                                    theme === themeOption.value
+                                                        ? 'bg-blue-50 [data-theme=\'dark\']_&:bg-blue-900/20 text-blue-600 [data-theme=\'dark\']_&:text-blue-400'
+                                                        : 'text-gray-700 [data-theme=\'dark\']_&:text-gray-300'
+                                                }`}
+                                            >
+                                                <span className="mr-2">{themeOption.icon}</span>
+                                                {themeOption.label}
+                                            </button>
+                                        ))}
                                     </div>
                                 </>
                             )}
                         </div>
-                    )}
 
-                    {/* Notifications */}
-                    {/*<button className="p-2 rounded-lg hover:bg-gray-100 relative [data-theme='dark']_&:hover:bg-gray-700">*/}
-                    {/*    <BellIcon />*/}
-                    {/*    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">*/}
-                    {/*        3*/}
-                    {/*    </span>*/}
-                    {/*</button>*/}
-
-                    {/* Profile Dropdown */}
-                    <div className="relative group">
-                        <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 [data-theme='dark']_&:hover:bg-gray-700">
-                            {state.user?.avatar ? (
-                                <img
-                                    src={state.user.avatar}
-                                    alt="Profile"
-                                    className="w-8 h-8 rounded-full"
-                                />
-                            ) : (
-                                <UserIcon />
-                            )}
-                            <div className="text-left">
-                                <span className="text-sm font-medium text-gray-700 block [data-theme='dark']_&:text-gray-200">
-                                    {state.user?.name || 'User'}
-                                </span>
-                                <span className="text-xs text-gray-500 [data-theme='dark']_&:text-gray-400">
-                                    {state.user?.role || 'Role'}
-                                </span>
-                            </div>
-                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
+                        {/* NOTIFICATIONS - Hidden on small screens */}
+                        <button className="hidden sm:block p-2 rounded-md text-gray-600 [data-theme='dark']_&:text-gray-400 hover:bg-gray-100 [data-theme='dark']_&:hover:bg-gray-700 transition-colors relative">
+                            <BellIcon />
+                            {/* Notification Badge */}
+                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                3
+                            </span>
                         </button>
 
-                        {/* Dropdown Menu */}
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md border-gray-100 shadow-lg py-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 [data-theme='dark']_&:bg-gray-800 border border-gray-100 [data-theme='dark']_&:border-gray-600">
-                            <div className="px-4 py-2 border-b border-gray-100 [data-theme='dark']_&:border-gray-600">
-                                <p className="text-sm font-medium text-gray-900 [data-theme='dark']_&:text-white">{state.user?.name}</p>
-                                <p className="text-sm text-gray-500 [data-theme='dark']_&:text-gray-400">{state.user?.email}</p>
-                            </div>
-                            <a href="#" className="block px-4 py-2 border-gray-100 text-sm text-gray-700 hover:bg-gray-100 [data-theme='dark']_&:text-gray-200 [data-theme='dark']_&:hover:bg-gray-700">
-                                Profile Settings
-                            </a>
-                            <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 [data-theme='dark']_&:text-gray-200 [data-theme='dark']_&:hover:bg-gray-700">
-                                Account Settings
-                            </a>
-                            <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 [data-theme='dark']_&:text-gray-200 [data-theme='dark']_&:hover:bg-gray-700">
-                                Help & Support
-                            </a>
-                            <div className="border-t border-gray-100 [data-theme='dark']_&:border-gray-100">
-                                <button
-                                    onClick={handleLogout}
-                                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 [data-theme='dark']_&:text-red-400 [data-theme='dark']_&:hover:bg-gray-700"
-                                >
-                                    Sign Out
-                                </button>
+                        {/* USER MENU */}
+                        <div className="relative group">
+                            <button className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 [data-theme='dark']_&:hover:bg-gray-700 transition-colors">
+                                {/* User Avatar */}
+                                <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-300 [data-theme='dark']_&:bg-gray-600 flex items-center justify-center">
+                                    {state.user?.avatar ? (
+                                        <img
+                                            src={state.user.avatar}
+                                            alt="Profile"
+                                            className="h-full w-full object-cover"
+                                        />
+                                    ) : (
+                                        <UserIcon/>
+                                    )}
+                                </div>
+
+                                {/* User Name - Hidden on small screens */}
+                                <div className="hidden md:block text-left">
+                                    <p className="text-sm font-medium text-gray-900 [data-theme='dark']_&:text-white">
+                                        {state.user?.name || 'User'}
+                                    </p>
+                                </div>
+
+                                {/* Dropdown Arrow */}
+                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            {/* User Dropdown Menu */}
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md border-gray-100 shadow-lg py-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 [data-theme='dark']_&:bg-gray-800 border border-gray-100 [data-theme='dark']_&:border-gray-600">
+                                <div className="px-4 py-2 border-b border-gray-100 [data-theme='dark']_&:border-gray-600">
+                                    <p className="text-sm font-medium text-gray-900 [data-theme='dark']_&:text-white">{state.user?.name}</p>
+                                    <p className="text-sm text-gray-500 [data-theme='dark']_&:text-gray-400">{state.user?.email}</p>
+                                </div>
+                                <a href="#" className="block px-4 py-2 border-gray-100 text-sm text-gray-700 hover:bg-gray-100 [data-theme='dark']_&:text-gray-200 [data-theme='dark']_&:hover:bg-gray-700">
+                                    Profile Settings
+                                </a>
+                                <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 [data-theme='dark']_&:text-gray-200 [data-theme='dark']_&:hover:bg-gray-700">
+                                    Account Settings
+                                </a>
+                                <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 [data-theme='dark']_&:text-gray-200 [data-theme='dark']_&:hover:bg-gray-700">
+                                    Help & Support
+                                </a>
+                                <div className="border-t border-gray-100 [data-theme='dark']_&:border-gray-100">
+                                    <button
+                                        onClick={handleLogout}
+                                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 [data-theme='dark']_&:text-red-400 [data-theme='dark']_&:hover:bg-gray-700"
+                                    >
+                                        Sign Out
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

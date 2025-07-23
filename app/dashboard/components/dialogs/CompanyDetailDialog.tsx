@@ -175,11 +175,21 @@ export default function CompanyDetailDialog({
                 <div className="flex items-center justify-between p-6 border-b border-gray-200 [data-theme='dark']_&:border-gray-600">
                     <div className="flex items-center space-x-4">
                         {/* Company Logo */}
+                        {
+                        company.logo ? (
+                            <img
+                                src={company.logo}
+                                alt={`${company.name} Logo`}
+                                className="w-16 h-16 rounded-lg object-cover"
+                            />
+                        ) : (
+
                         <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
                             <span className="text-white font-bold text-xl">
                                 {company.name.split(' ').map(word => word[0]).join('').substring(0, 2)}
                             </span>
                         </div>
+                        )}
                         <div>
                             <h2 className="text-2xl font-bold text-gray-900 [data-theme='dark']_&:text-white">{company.name}</h2>
                             <div className="flex items-center space-x-3 mt-1">

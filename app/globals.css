@@ -192,3 +192,168 @@ textarea:focus {
   transition-duration: 150ms;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* Prevent horizontal scroll on mobile */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  /* Better touch targets for mobile */
+  button, a[role="button"], .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better input fields on mobile */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  select,
+  textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 0.75rem;
+  }
+
+  /* Better button spacing on mobile */
+  .btn, button {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Fix for iOS Safari viewport height issues */
+@supports (-webkit-touch-callout: none) {
+  .h-screen {
+    height: -webkit-fill-available;
+  }
+}
+
+/* Better scrolling for tables on mobile */
+.overflow-x-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E0 #F7FAFC;
+}
+
+.overflow-x-auto::-webkit-scrollbar {
+  height: 6px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: #F7FAFC;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: #CBD5E0;
+  border-radius: 3px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: #A0AEC0;
+}
+
+/* Dark mode scrollbar */
+[data-theme="dark"] .overflow-x-auto {
+  scrollbar-color: #4A5568 #2D3748;
+}
+
+[data-theme="dark"] .overflow-x-auto::-webkit-scrollbar-track {
+  background: #2D3748;
+}
+
+[data-theme="dark"] .overflow-x-auto::-webkit-scrollbar-thumb {
+  background: #4A5568;
+}
+
+[data-theme="dark"] .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
+
+/* Mobile dialog improvements */
+@media (max-width: 640px) {
+  .fixed.inset-0 > div {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+    width: calc(100vw - 2rem);
+  }
+}
+
+/* Mobile-specific utilities */
+@media (max-width: 640px) {
+  .mobile-p-4 { padding: 1rem !important; }
+  .mobile-px-4 { padding-left: 1rem !important; padding-right: 1rem !important; }
+  .mobile-py-4 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+  .mobile-text-sm { font-size: 0.875rem !important; }
+  .mobile-space-y-2 > * + * { margin-top: 0.5rem !important; }
+}
+
+/* Better focus states for mobile accessibility */
+@media (max-width: 768px) {
+  button:focus,
+  input:focus,
+  select:focus,
+  textarea:focus,
+  a:focus {
+    outline: 2px solid #3B82F6;
+    outline-offset: 2px;
+  }
+}
+
+/* Prevent zoom on double tap in iOS */
+button, input, select, textarea {
+  touch-action: manipulation;
+}
+
+/* Mobile-specific loading animation */
+@keyframes mobile-loading {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.mobile-loading {
+  animation: mobile-loading 1s linear infinite;
+}
+
+/* Better mobile card layouts */
+@media (max-width: 1024px) {
+  .mobile-card {
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    background: white;
+  }
+
+  [data-theme="dark"] .mobile-card {
+    background: #1f2937;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Mobile-specific responsive classes */
+@media (max-width: 640px) {
+  .sm-hidden { display: none !important; }
+  .sm-block { display: block !important; }
+  .sm-flex { display: flex !important; }
+  .sm-grid { display: grid !important; }
+  .sm-w-full { width: 100% !important; }
+  .sm-text-center { text-align: center !important; }
+}
+
+/* Tablet responsive classes */
+@media (min-width: 640px) and (max-width: 1024px) {
+  .md-hidden { display: none !important; }
+  .md-block { display: block !important; }
+  .md-flex { display: flex !important; }
+  .md-grid { display: grid !important; }
+}
+
+/* Desktop responsive classes */
+@media (min-width: 1024px) {
+  .lg-hidden { display: none !important; }
+  .lg-block { display: block !important; }
+  .lg-flex { display: flex !important; }
+  .lg-grid { display: grid !important; }
+}

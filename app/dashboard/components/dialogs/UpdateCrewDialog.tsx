@@ -58,8 +58,8 @@ export default function UpdateCrewDialog({
             await updateCrewMutation.mutateAsync({
                 vessel_id: crewMember.vessel_id,
                 user_role_code: selectedRole,
-                user_id: crewMember.id.toString(), // Convert to string if needed
-                company_id: 'current-company-id', // You need to get this from context or props
+                user_id: crewMember.user_id, // Convert to string if needed
+                company_id: crewMember.company.id, // You need to get this from context or props
             });
 
             onSuccess?.();
@@ -77,8 +77,8 @@ export default function UpdateCrewDialog({
             await removeCrewMutation.mutateAsync({
                 vessel_id: crewMember.vessel_id,
                 user_role_code: currentRole?.role_code || '',
-                user_id: crewMember.id.toString(),
-                company_id: 'current-company-id', // You need to get this from context or props
+                user_id: crewMember.user_id,
+                company_id: crewMember.company.id, // You need to get this from context or props
             });
 
             onSuccess?.();

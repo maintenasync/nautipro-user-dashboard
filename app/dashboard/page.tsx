@@ -1,4 +1,4 @@
-// app/dashboard/page.tsx
+// app/dashboard/page.tsx - QUICK MOBILE FIX
 
 'use client';
 
@@ -50,40 +50,38 @@ const menuItems = [
 // Dashboard Content Component (protected content)
 function DashboardContent() {
     const { state, refreshUserData } = useAuth();
-    const [sidebarOpen, setSidebarOpen] = useState(true);
     const [activeMenuItem, setActiveMenuItem] = useState('home');
+    const [sidebarOpen, setSidebarOpen] = useState(false); // DEFAULT FALSE untuk mobile
     const [currentView, setCurrentView] = useState<'main' | 'create-company' | 'create-vessel' | 'vessel-detail'>('main');
-    const [selectedVesselId, setSelectedVesselId] = useState<number | null>(null);
+    const [selectedVesselId, setSelectedVesselId] = useState<string | null>(null);
 
-    // Auto refresh user data setiap 10 menit
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (state.isAuthenticated) {
-                refreshUserData();
-            }
-        }, 10 * 60 * 1000); // 10 minutes
-
-        return () => clearInterval(interval);
-    }, [state.isAuthenticated, refreshUserData]);
-
-    // Handle window resize untuk sidebar
+    // RESPONSIVE BEHAVIOR HANDLER
     useEffect(() => {
         const handleResize = () => {
-            if (window.innerWidth < 768) {
-                setSidebarOpen(false);
-            } else {
+            if (window.innerWidth >= 1024) {
+                // Desktop: sidebar auto-open
                 setSidebarOpen(true);
+            } else {
+                // Mobile: sidebar auto-close
+                setSidebarOpen(false);
             }
         };
 
         // Set initial state
         handleResize();
 
+        // Listen to resize
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Navigation handlers
+    // Close sidebar when menu item changes on mobile
+    useEffect(() => {
+        if (window.innerWidth < 1024) {
+            setSidebarOpen(false);
+        }
+    }, [activeMenuItem]);
+
     const handleBackToMain = () => {
         setCurrentView('main');
         setSelectedVesselId(null);
@@ -97,21 +95,16 @@ function DashboardContent() {
         setCurrentView('create-vessel');
     };
 
-    const handleNavigateToVesselDetail = (vesselId: number) => {
+    const handleNavigateToVesselDetail = (vesselId: string) => {
         setSelectedVesselId(vesselId);
         setCurrentView('vessel-detail');
     };
 
-    // Handle form submissions
     const handleCreateCompany = async (companyData: unknown) => {
         try {
             console.log('Creating company:', companyData);
-            // Here you would typically make an API call to save the company
-            // For now, we'll just go back to the main view
             setCurrentView('main');
             setActiveMenuItem('companies');
-
-            // Refresh user data untuk update statistics jika perlu
             await refreshUserData();
         } catch (error) {
             console.error('Error creating company:', error);
@@ -121,12 +114,8 @@ function DashboardContent() {
     const handleCreateVessel = async (vesselData: unknown) => {
         try {
             console.log('Creating vessel:', vesselData);
-            // Here you would typically make an API call to save the vessel
-            // For now, we'll just go back to the main view
             setCurrentView('main');
             setActiveMenuItem('vessels');
-
-            // Refresh user data untuk update statistics jika perlu
             await refreshUserData();
         } catch (error) {
             console.error('Error creating vessel:', error);
@@ -186,29 +175,38 @@ function DashboardContent() {
     // Loading state untuk operations
     if (state.isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 [data-theme='dark']_&:bg-gray-900">
                 <div className="flex flex-col items-center space-y-4">
                     <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-                    <p className="text-gray-600">Loading dashboard...</p>
+                    <p className="text-gray-600 [data-theme='dark']_&:text-gray-400">Loading dashboard...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="flex h-screen bg-gray-100 [data-theme='dark']_&:bg-gray-900">
-            {/* Sidebar */}
-            <Sidebar
-                sidebarOpen={sidebarOpen}
-                setSidebarOpen={setSidebarOpen}
-                menuItems={menuItems}
-                activeMenuItem={activeMenuItem}
-                setActiveMenuItem={setActiveMenuItem}
-            />
+        <div className="flex h-screen bg-gray-100 [data-theme='dark']_&:bg-gray-900 relative overflow-hidden">
+            {/* MOBILE/DESKTOP RESPONSIVE SIDEBAR */}
+            <div className={`
+                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+                lg:translate-x-0
+                fixed top-0 left-0 z-50 h-full
+                lg:relative lg:z-auto
+                transition-transform duration-300 ease-in-out
+                ${sidebarOpen ? 'w-64' : 'w-64 lg:w-20'}
+            `}>
+                <Sidebar
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
+                    menuItems={menuItems}
+                    activeMenuItem={activeMenuItem}
+                    setActiveMenuItem={setActiveMenuItem}
+                />
+            </div>
 
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col min-w-0">
-                {/* Top Bar */}
+            {/* MAIN CONTENT AREA */}
+            <div className="flex-1 flex flex-col min-w-0 relative">
+                {/* TOPBAR WITH MOBILE MENU BUTTON */}
                 <TopBar
                     menuItems={menuItems}
                     activeMenuItem={activeMenuItem}
@@ -216,19 +214,20 @@ function DashboardContent() {
                     setSidebarOpen={setSidebarOpen}
                 />
 
-                {/* Content Area */}
+                {/* CONTENT AREA */}
                 <main className="flex-1 overflow-y-auto bg-gray-50 [data-theme='dark']_&:bg-gray-900">
-                    <div className="p-6">
+                    <div className="p-4 sm:p-6">
                         {getActiveComponent()}
                     </div>
                 </main>
             </div>
 
-            {/* Mobile Sidebar Overlay */}
+            {/* MOBILE OVERLAY BACKDROP */}
             {sidebarOpen && (
                 <div
                     className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
                     onClick={() => setSidebarOpen(false)}
+                    aria-hidden="true"
                 />
             )}
         </div>
@@ -256,30 +255,25 @@ class DashboardErrorBoundary extends React.Component<
     render() {
         if (this.state.hasError) {
             return (
-                <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                    <div className="max-w-md w-full mx-4">
-                        <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z" />
-                                </svg>
-                            </div>
-
-                            <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                                Something went wrong
-                            </h2>
-
-                            <p className="text-gray-600 mb-6">
-                                An error occurred while loading the dashboard.
-                            </p>
-
-                            <button
-                                onClick={() => window.location.reload()}
-                                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                            >
-                                Reload Page
-                            </button>
+                <div className="min-h-screen flex items-center justify-center bg-gray-50 [data-theme='dark']_&:bg-gray-900 p-4">
+                    <div className="max-w-md w-full bg-white [data-theme='dark']_&:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+                        <div className="w-16 h-16 bg-red-100 [data-theme='dark']_&:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-8 h-8 text-red-600 [data-theme='dark']_&:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
                         </div>
+                        <h2 className="text-xl font-bold text-gray-800 [data-theme='dark']_&:text-white mb-2">
+                            Something went wrong
+                        </h2>
+                        <p className="text-gray-600 [data-theme='dark']_&:text-gray-400 mb-6">
+                            We're sorry, but something unexpected happened. Please refresh the page or try again later.
+                        </p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                        >
+                            Reload Page
+                        </button>
                     </div>
                 </div>
             );
@@ -289,32 +283,12 @@ class DashboardErrorBoundary extends React.Component<
     }
 }
 
-// Main Dashboard Page Component
-export default function DashboardPage() {
+export default function Dashboard() {
     return (
-        <DashboardErrorBoundary>
-            <ProtectedRoute>
+        <ProtectedRoute>
+            <DashboardErrorBoundary>
                 <DashboardContent />
-            </ProtectedRoute>
-        </DashboardErrorBoundary>
+            </DashboardErrorBoundary>
+        </ProtectedRoute>
     );
 }
-
-// Export individual route guards untuk specific pages jika diperlukan
-// export const AdminDashboard = () => (
-//     <ProtectedRoute requiredRole="Admin">
-//         <DashboardContent />
-//     </ProtectedRoute>
-// );
-//
-// export const ManagerDashboard = () => (
-//     <ProtectedRoute requiredRole="Manager">
-//         <DashboardContent />
-//     </ProtectedRoute>
-// );
-//
-// export const SuperintendentDashboard = () => (
-//     <ProtectedRoute requiredRole="Superintendent">
-//         <DashboardContent />
-//     </ProtectedRoute>
-// );

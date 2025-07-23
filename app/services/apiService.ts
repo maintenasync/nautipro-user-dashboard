@@ -89,7 +89,7 @@ class ApiService {
         user_id: string;
         company_id: string;
     }): Promise<ApiResponse<any>> {
-        return this.request<any>('/update-vessel-member-maintena', {
+        return this.request<any>('/end-vessel-member-maintena', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

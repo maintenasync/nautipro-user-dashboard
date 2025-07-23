@@ -134,6 +134,18 @@ export interface CompanyUI {
     id: string;
     name: string;
     location: string;
+    registrationNumber: string;
+    address: string;
+    city: string;
+    province: string;
+    postalCode: string;
+    country: string;
+    phone: string;
+    email: string;
+    website: string;
+    logo?: string;
+    createdAt: string;
+    updatedAt: string;
     vessels?: number;
     crews?: number;
     created: string;
@@ -157,8 +169,10 @@ export interface CrewMemberUI {
     vessel: string;
     vessel_id: string;
     startDate: string;
+    user_id: string;
     status: string;
     avatar?: string;
+    company: CompanyUI;
 }
 
 // CORRECTED LicenseUI - matching what's actually used in components

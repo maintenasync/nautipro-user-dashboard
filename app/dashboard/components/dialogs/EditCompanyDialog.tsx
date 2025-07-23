@@ -57,16 +57,23 @@ export default function EditCompanyDialog({ isOpen, company, onClose, onSuccess 
             // For now, we'll populate what we can from the UI data
             setFormData({
                 name: company.name || '',
-                registration_number: '', // Need to fetch from API
-                address: '',
-                city: company.location.split(', ')[0] || '',
-                province: company.location.split(', ')[1] || '',
-                postal_code: '',
-                country: 'Indonesia',
-                phone: '',
-                email: '',
-                website: '',
+                registration_number: company.registrationNumber || '',
+                address: company.address || '',
+                city: company.city || '',
+                province: company.province || '',
+                postal_code: company.postalCode || '',
+                country: company.country || 'Indonesia',
+                phone: company.phone || '',
+                email: company.email || '',
+                website: company.website || '',
             });
+
+            // Set logo preview if available
+            if (company.logo) {
+                setLogoPreview(company.logo);
+            } else {
+                setLogoPreview('');
+            }
         }
     }, [company, isOpen]);
 
