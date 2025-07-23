@@ -34,6 +34,7 @@ import {
     NotificationIcon,
     SettingsIcon
 } from './components/icons/Icons';
+import {useUserDataManager} from "@/app/hooks/useDataManager";
 
 // Menu items configuration
 const menuItems = [
@@ -266,7 +267,7 @@ class DashboardErrorBoundary extends React.Component<
                             Something went wrong
                         </h2>
                         <p className="text-gray-600 [data-theme='dark']_&:text-gray-400 mb-6">
-                            We're sorry, but something unexpected happened. Please refresh the page or try again later.
+                            We&#39;re sorry, but something unexpected happened. Please refresh the page or try again later.
                         </p>
                         <button
                             onClick={() => window.location.reload()}
@@ -284,6 +285,7 @@ class DashboardErrorBoundary extends React.Component<
 }
 
 export default function Dashboard() {
+    useUserDataManager();
     return (
         <ProtectedRoute>
             <DashboardErrorBoundary>

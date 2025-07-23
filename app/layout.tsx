@@ -5,7 +5,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from './contexts/AuthContext';
 import ClientThemeProvider from './components/providers/ClientThemeProvider';
-import QueryProvider from './providers/QueryProvider'; // ADD THIS IMPORT
+import QueryProvider from './providers/QueryProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -23,11 +23,15 @@ export default function RootLayout({
         <html lang="en" suppressHydrationWarning>
         <body className={inter.className} suppressHydrationWarning>
         <ClientThemeProvider>
-            <AuthProvider>
-                <QueryProvider>
+            {/*
+                        PENTING: QueryProvider HARUS di atas AuthProvider
+                        Karena AuthProvider menggunakan useQueryClient()
+                    */}
+            <QueryProvider>
+                <AuthProvider>
                     {children}
-                </QueryProvider>
-            </AuthProvider>
+                </AuthProvider>
+            </QueryProvider>
         </ClientThemeProvider>
         </body>
         </html>

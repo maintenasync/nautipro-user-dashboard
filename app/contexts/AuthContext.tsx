@@ -5,6 +5,7 @@
 import { createContext, useContext, useEffect, useReducer, ReactNode } from 'react';
 import { AuthState, User, LoginRequest, RegisterRequest } from '../types/auth';
 import authService from '../services/authService';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Auth Actions
 type AuthAction =
@@ -117,6 +118,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Auth provider component
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [state, dispatch] = useReducer(authReducer, initialState);
+    const queryClient = useQueryClient(); // ← TAMBAH INI
 
     // Function untuk fetch user data dari API
     const fetchUserData = async (token: string): Promise<User | null> => {
@@ -245,6 +247,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     license: response.data.license,
                 };
 
+                // ← TAMBAH BAGIAN INI untuk clear cache dari user sebelumnya
+                queryClient.clear();
+
                 dispatch({
                     type: 'LOGIN_SUCCESS',
                     payload: {
@@ -285,8 +290,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const logout = () => {
+        // Clear localStorage
         authService.logout();
+
+        // ← TAMBAH BAGIAN INI untuk clear React Query cache
+        queryClient.clear();
+        queryClient.removeQueries();
+        queryClient.resetQueries();
+
+        // Dispatch logout action
         dispatch({ type: 'LOGOUT' });
+
+        // Additional cleanup
+        setTimeout(() => {
+            queryClient.invalidateQueries();
+        }, 100);
     };
 
     return (

@@ -12,13 +12,19 @@ import type {
 } from '@/app/types/api';
 
 const BASE_URL = 'https://auth.nautiproconnect.com/api/v1/web';
+const BASE_URL_API = 'https://dev-api.nautiproconnect.com/api/v1/web';
 
 class ApiService {
     private async request<T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>> {
         try {
             const headers = authService.getAuthHeaders();
 
-            const response = await fetch(`${BASE_URL}${endpoint}`, {
+            let baseUrl = BASE_URL;
+            if (endpoint == "/vessel-types") {
+                baseUrl = BASE_URL_API;
+            }
+
+            const response = await fetch(`${baseUrl}${endpoint}`, {
                 ...options,
                 headers: {
                     ...headers,
@@ -36,6 +42,20 @@ class ApiService {
             console.error('API Request failed:', error);
             throw error;
         }
+    }
+
+    async getDashboardOverview(): Promise<ApiResponse<{
+        total_company: number;
+        total_vessel: number;
+        total_license: number;
+    }>> {
+        return this.request<{
+            total_company: number;
+            total_vessel: number;
+            total_license: number;
+        }>('/get-overview-total-company-vessel-license', {
+            method: 'GET',
+        });
     }
 
     private async requestWithFormData<T>(endpoint: string, formData: FormData): Promise<ApiResponse<T>> {

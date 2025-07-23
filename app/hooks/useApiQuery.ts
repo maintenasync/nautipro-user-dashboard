@@ -17,6 +17,21 @@ import type {
     UserRole
 } from '@/app/types/api';
 
+// ========== DASHBOARD OVERVIEW HOOKS ==========
+export const useDashboardOverview = () => {
+    return useQuery({
+        queryKey: ['dashboard-overview'],
+        queryFn: async () => {
+            const response = await apiService.getDashboardOverview();
+            return response.data;
+        },
+        staleTime: 2 * 60 * 1000, // Cache for 2 minutes
+        refetchOnWindowFocus: true, // Refresh when user focuses window
+        retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    });
+};
+
 // CORRECTED Transform functions
 const transformCompanyForUI = (company: Company): CompanyUI => ({
     id: company.id,
