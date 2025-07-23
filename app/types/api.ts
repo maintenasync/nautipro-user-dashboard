@@ -7,6 +7,43 @@ export interface ApiResponse<T> {
     data: T;
 }
 
+// ========== NOTIFICATION SETTING INTERFACES ==========
+export interface NotificationSetting {
+    id: number;
+    user_id: string;
+    telegram_chat_id: string;
+    telegram_username: string;
+    email: string;
+    phone_number: string;
+    whatsapp_number: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface NotificationSettingRequest {
+    id: number;
+    user_id: string;
+    telegram_chat_id: string;
+    telegram_username: string;
+    email: string;
+    phone_number: string;
+    whatsapp_number: string;
+}
+
+// For UI Components (transformed data)
+export interface NotificationSettingUI {
+    id: number;
+    userId: string;
+    telegramChatId: string;
+    telegramUsername: string;
+    email: string;
+    phoneNumber: string;
+    whatsappNumber: string;
+    createdAt: string;
+    updatedAt: string;
+    isNew: boolean; // untuk menentukan apakah ini data baru atau update
+}
+
 // Company Interfaces
 export interface Company {
     id: string;

@@ -20,7 +20,7 @@ class ApiService {
             const headers = authService.getAuthHeaders();
 
             let baseUrl = BASE_URL;
-            if (endpoint == "/vessel-types") {
+            if (endpoint == "/vessel-types" || endpoint.includes("/update-image-vessel/")) {
                 baseUrl = BASE_URL_API;
             }
 
@@ -55,6 +55,100 @@ class ApiService {
             total_license: number;
         }>('/get-overview-total-company-vessel-license', {
             method: 'GET',
+        });
+    }
+
+// ========== NOTIFICATION SETTING API ==========
+    async getNotificationSetting(): Promise<ApiResponse<{
+        id: number;
+        user_id: string;
+        telegram_chat_id: string;
+        telegram_username: string;
+        email: string;
+        phone_number: string;
+        whatsapp_number: string;
+        created_at: string;
+        updated_at: string;
+    }>> {
+        try {
+            const response = await this.request<{
+                id: number;
+                user_id: string;
+                telegram_chat_id: string;
+                telegram_username: string;
+                email: string;
+                phone_number: string;
+                whatsapp_number: string;
+                created_at: string;
+                updated_at: string;
+            }>('/get-notification-contact', {
+                method: 'GET',
+            });
+
+            return response;
+        } catch (error: any) {
+            // Jika not found (404 atau error lain), return default dengan current user email
+            if (error.message?.includes('404') || error.message?.includes('not found')) {
+                // ← MENGGUNAKAN authService.getCurrentUser() yang sudah ada
+                const currentUser = await authService.getCurrentUser();
+                const defaultData = {
+                    id: 0, // 0 untuk create new
+                    user_id: currentUser?.id || '',
+                    telegram_chat_id: '',
+                    telegram_username: '',
+                    email: currentUser?.email || '',
+                    phone_number: '',
+                    whatsapp_number: '',
+                    created_at: '',
+                    updated_at: ''
+                };
+
+                return {
+                    code: 200,
+                    status: 'OK',
+                    data: defaultData
+                };
+            }
+
+            throw error;
+        }
+    }
+
+    async saveNotificationSetting(data: {
+        id: number;
+        user_id: string;
+        telegram_chat_id: string;
+        telegram_username: string;
+        email: string;
+        phone_number: string;
+        whatsapp_number: string;
+    }): Promise<ApiResponse<{
+        id: number;
+        user_id: string;
+        telegram_chat_id: string;
+        telegram_username: string;
+        email: string;
+        phone_number: string;
+        whatsapp_number: string;
+        created_at: string;
+        updated_at: string;
+    }>> {
+        return this.request<{
+            id: number;
+            user_id: string;
+            telegram_chat_id: string;
+            telegram_username: string;
+            email: string;
+            phone_number: string;
+            whatsapp_number: string;
+            created_at: string;
+            updated_at: string;
+        }>('/save-notification-contact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
         });
     }
 

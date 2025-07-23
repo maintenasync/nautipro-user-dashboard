@@ -17,6 +17,70 @@ import type {
     UserRole
 } from '@/app/types/api';
 
+import type {
+    NotificationSetting,
+    NotificationSettingRequest,
+    NotificationSettingUI
+} from '@/app/types/api';
+
+// Transform function untuk notification setting
+const transformNotificationSettingForUI = (setting: NotificationSetting): NotificationSettingUI => ({
+    id: setting.id,
+    userId: setting.user_id,
+    telegramChatId: setting.telegram_chat_id,
+    telegramUsername: setting.telegram_username,
+    email: setting.email,
+    phoneNumber: setting.phone_number,
+    whatsappNumber: setting.whatsapp_number,
+    createdAt: setting.created_at ? new Date(parseInt(setting.created_at)).toLocaleDateString('id-ID') : '',
+    updatedAt: setting.updated_at ? new Date(parseInt(setting.updated_at)).toLocaleDateString('id-ID') : '',
+    isNew: setting.id === 0, // jika id 0 berarti data baru
+});
+
+// ========== NOTIFICATION SETTING HOOKS ==========
+export const useNotificationSetting = () => {
+    return useQuery({
+        queryKey: ['notification-setting'],
+        queryFn: async () => {
+            const response = await apiService.getNotificationSetting();
+            return transformNotificationSettingForUI(response.data);
+        },
+        staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+        retry: 1, // Only retry once for this endpoint
+    });
+};
+
+export const useSaveNotificationSetting = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: NotificationSettingUI) => {
+            // Transform UI data back to API format
+            const apiData: NotificationSettingRequest = {
+                id: data.isNew ? 0 : data.id, // Set id to 0 for new data
+                user_id: data.userId,
+                telegram_chat_id: data.telegramChatId,
+                telegram_username: data.telegramUsername,
+                email: data.email,
+                phone_number: data.phoneNumber,
+                whatsapp_number: data.whatsappNumber,
+            };
+
+            const response = await apiService.saveNotificationSetting(apiData);
+            return transformNotificationSettingForUI(response.data);
+        },
+        onSuccess: (savedData) => {
+            // Update the cache with saved data
+            queryClient.setQueryData(['notification-setting'], savedData);
+
+            // Invalidate to ensure fresh data
+            queryClient.invalidateQueries({ queryKey: ['notification-setting'] });
+        },
+        onError: (error) => {
+            console.error('Failed to save notification setting:', error);
+        }
+    });
+};
 // ========== DASHBOARD OVERVIEW HOOKS ==========
 export const useDashboardOverview = () => {
     return useQuery({
