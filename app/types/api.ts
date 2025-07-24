@@ -153,6 +153,7 @@ export interface Invitation {
     updated_at: string;
     company: Company;
     user_role: UserRole;
+    vessel: Vessel;
 }
 
 // License Interfaces

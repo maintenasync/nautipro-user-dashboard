@@ -10,8 +10,8 @@ import QueryProvider from './providers/QueryProvider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-    title: 'Maritime Dashboard - Nautipro Connect',
-    description: 'Maritime Dashboard Management System',
+    title: 'Maintena Sync Dashboard - Nautipro Connect Solutions',
+    description: 'Planned maintenance system for vessels and crews',
 };
 
 export default function RootLayout({

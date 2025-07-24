@@ -186,7 +186,7 @@ const transformLicenseForUI = (license: License): LicenseUI => {
 };
 
 // CORRECTED Invitation transform function
-const transformInvitationForUI = (invitation: Invitation, vessels: VesselUI[] = []): InvitationUI => {
+const transformInvitationForUI = (invitation: Invitation): InvitationUI => {
     const createdAt = new Date(parseInt(invitation.created_at));
     const expiredAt = new Date(parseInt(invitation.expired_at));
     const now = new Date();
@@ -194,7 +194,7 @@ const transformInvitationForUI = (invitation: Invitation, vessels: VesselUI[] = 
     const isExpired = daysRemaining < 0;
 
     // Find vessel name from vessels list
-    const vessel = vessels.find(v => v.id === invitation.vessel_id);
+    const vessel = invitation.vessel;
     const vesselName = vessel?.name || 'Unknown Vessel';
 
     return {
@@ -629,15 +629,16 @@ export const useFilteredLicenses = (filters: {
 // ========== INVITATIONS HOOKS ==========
 
 export const useInvitations = () => {
-    const { data: vessels = [] } = useAllVessels();
+    // const { data: vessels = [] } = useAllVessels();
 
     return useQuery({
         queryKey: ['invitations'],
         queryFn: async () => {
             const response = await apiService.getInvitations();
-            return response.data.map(invitation => transformInvitationForUI(invitation, vessels));
+            return response.data.map(invitation => transformInvitationForUI(invitation));
         },
-        enabled: vessels.length > 0,
+        // enabled: vessels.length > 0,
+        enabled: true, // Always enabled to fetch invitations
         staleTime: 2 * 60 * 1000, // 2 minutes
     });
 };
