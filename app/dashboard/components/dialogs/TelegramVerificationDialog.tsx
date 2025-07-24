@@ -260,7 +260,7 @@ export default function TelegramVerificationDialog({ isOpen, onClose, onSuccess 
                                         <li>Copy the verification message below</li>
                                         <li>Open our Telegram bot</li>
                                         <li>Send the copied message to the bot</li>
-                                        <li>Return here and enter your Telegram username</li>
+                                        <li>Return here and refresh this dasboard</li>
                                     </ol>
                                 </div>
 
@@ -309,42 +309,40 @@ export default function TelegramVerificationDialog({ isOpen, onClose, onSuccess 
                                 </button>
 
                                 {/* Username Input */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 [data-theme='dark']_&:text-gray-300 mb-2">
-                                        Your Telegram Username
-                                    </label>
-                                    <div className="flex space-x-3">
-                                        <input
-                                            type="text"
-                                            value={username}
-                                            onChange={(e) => setUsername(e.target.value)}
-                                            placeholder="@your_username"
-                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-400 [data-theme='dark']_&:border-gray-600 [data-theme='dark']_&:bg-gray-700 [data-theme='dark']_&:text-white"
-                                        />
-                                        <button
-                                            onClick={handleComplete}
-                                            disabled={!username.trim() || timeRemaining <= 0 || isLoading}
-                                            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 flex items-center space-x-1"
-                                        >
-                                            {isLoading && (
-                                                <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                            )}
-                                            <span>{isLoading ? 'Saving...' : 'Complete'}</span>
-                                        </button>
-                                    </div>
-                                </div>
+                                {/*<div>*/}
+                                {/*    <label className="block text-sm font-medium text-gray-700 [data-theme='dark']_&:text-gray-300 mb-2">*/}
+                                {/*        Your Telegram Username*/}
+                                {/*    </label>*/}
+                                {/*    <div className="flex space-x-3">*/}
+                                {/*        <input*/}
+                                {/*            type="text"*/}
+                                {/*            value={username}*/}
+                                {/*            onChange={(e) => setUsername(e.target.value)}*/}
+                                {/*            placeholder="@your_username"*/}
+                                {/*            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-400 [data-theme='dark']_&:border-gray-600 [data-theme='dark']_&:bg-gray-700 [data-theme='dark']_&:text-white"*/}
+                                {/*        />*/}
+                                {/*        <button*/}
+                                {/*            onClick={handleComplete}*/}
+                                {/*            disabled={!username.trim() || timeRemaining <= 0 || isLoading}*/}
+                                {/*            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 flex items-center space-x-1"*/}
+                                {/*        >*/}
+                                {/*            {isLoading && (*/}
+                                {/*                <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">*/}
+                                {/*                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>*/}
+                                {/*                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>*/}
+                                {/*                </svg>*/}
+                                {/*            )}*/}
+                                {/*            <span>{isLoading ? 'Saving...' : 'Complete'}</span>*/}
+                                {/*        </button>*/}
+                                {/*    </div>*/}
+                                {/*</div>*/}
 
                                 {/* Instructions */}
                                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 [data-theme='dark']_&:bg-gray-700 [data-theme='dark']_&:border-gray-600">
-                                    <h5 className="text-sm font-medium text-gray-800 [data-theme='dark']_&:text-gray-200 mb-2">📝 How to find your username:</h5>
+                                    <h5 className="text-sm font-medium text-gray-800 [data-theme='dark']_&:text-gray-200 mb-2">Have a trouble access telegram bot ?</h5>
                                     <ul className="text-xs text-gray-600 [data-theme='dark']_&:text-gray-400 space-y-1">
-                                        <li>• Open Telegram app</li>
-                                        <li>• Go to Settings → Edit Profile</li>
-                                        <li>• Your username appears as @username</li>
-                                        <li>• Enter it exactly as shown (with @)</li>
+                                        <li>Open Link Manual :</li>
+                                        <li>https://t.me/maintena_sync_bot</li>
                                     </ul>
                                 </div>
                             </div>

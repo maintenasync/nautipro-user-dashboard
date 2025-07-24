@@ -277,7 +277,7 @@ export default function NotificationSetting() {
                                         value={settings.telegram.username}
                                         onChange={(e) => handleUpdate('telegram', 'username', e.target.value)}
                                         placeholder="@username"
-                                        disabled={!settings.telegram.verified}
+                                        disabled={true}
                                         className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-400 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed [data-theme='dark']_&:border-gray-600 [data-theme='dark']_&:bg-gray-700 [data-theme='dark']_&:text-white [data-theme='dark']_&:disabled:bg-gray-600"
                                     />
                                     <button
