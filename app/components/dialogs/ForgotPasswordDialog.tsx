@@ -28,11 +28,11 @@ const ForgotPasswordDialog: React.FC<ForgotPasswordDialogProps> = ({
         setSuccess(false);
 
         try {
-            const response = await fetch('/api/forgot-password', {
+            const response = await fetch('https://auth.nautiproconnect.com/api/v1/web/forgot-password', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'api-key': process.env.NEXT_PUBLIC_API_KEY || ''
+                    'api-key': '12345678'
                 },
                 body: JSON.stringify({ email })
             });
