@@ -437,7 +437,7 @@ export const useCompanies = () => {
         queryKey: ['companies'],
         queryFn: async () => {
             const response = await apiService.getCompanies();
-            return response.data.map(transformCompanyForUI);
+            return response.data ? response.data.map(transformCompanyForUI) : [];
         },
         staleTime: 5 * 60 * 1000,
     });

@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../contexts/AuthContext';
 import {LogoIcon} from '../dashboard/components/icons/Logos';
+import ForgotPasswordDialog from '../components/dialogs/ForgotPasswordDialog';
 
 export default function LoginPage() {
     const [formData, setFormData] = useState({
@@ -23,6 +24,8 @@ export default function LoginPage() {
             [e.target.name]: e.target.value,
         });
     };
+
+    const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -121,10 +124,14 @@ export default function LoginPage() {
                             </label>
                         </div>
 
-                        <div className="text-sm">
-                            <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+                        <div className="text-sm flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setIsForgotPasswordOpen(true)}
+                                className="font-medium text-blue-600 hover:text-blue-500 [data-theme='dark']_&:text-blue-400 [data-theme='dark']_&:hover:text-blue-300"
+                            >
                                 Forgot your password?
-                            </a>
+                            </button>
                         </div>
                     </div>
 
@@ -159,26 +166,14 @@ export default function LoginPage() {
                             </Link>
                         </p>
                     </div>
-
-                    {/* Demo Credentials */}
-                    {/*<div className="bg-blue-50 border border-blue-200 rounded-md p-3">*/}
-                    {/*    <div className="flex">*/}
-                    {/*        <div className="flex-shrink-0">*/}
-                    {/*            <svg className="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">*/}
-                    {/*                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />*/}
-                    {/*            </svg>*/}
-                    {/*        </div>*/}
-                    {/*        <div className="ml-3">*/}
-                    {/*            <h3 className="text-sm font-medium text-blue-800">Demo Credentials</h3>*/}
-                    {/*            <div className="mt-2 text-sm text-blue-700">*/}
-                    {/*                <p>Username: demo</p>*/}
-                    {/*                <p>Password: korindo123</p>*/}
-                    {/*            </div>*/}
-                    {/*        </div>*/}
-                    {/*    </div>*/}
-                    {/*</div>*/}
                 </form>
             </div>
+
+            <ForgotPasswordDialog
+                isOpen={isForgotPasswordOpen}
+                onClose={() => setIsForgotPasswordOpen(false)}
+            />
+
         </div>
     );
 }
