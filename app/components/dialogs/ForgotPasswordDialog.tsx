@@ -32,7 +32,7 @@ const ForgotPasswordDialog: React.FC<ForgotPasswordDialogProps> = ({
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'api-key': '12345678'
+                    'x-api-key': '12345678'
                 },
                 body: JSON.stringify({ email })
             });
