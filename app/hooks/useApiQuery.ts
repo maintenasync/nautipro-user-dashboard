@@ -593,8 +593,15 @@ export const useLicenses = () => {
     return useQuery({
         queryKey: ['licenses'],
         queryFn: async () => {
-            const response = await apiService.getLicenses();
-            return response.data.map(transformLicenseForUI);
+            try {
+                const response = await apiService.getLicenses();
+                return response.data.map(transformLicenseForUI);
+            } catch (error) {
+                // Log error for debugging purposes if needed
+                console.error("Error fetching licenses:", error);
+                // Return an empty array on error to prevent UI from showing a failed state
+                return [];
+            }
         },
         staleTime: 5 * 60 * 1000, // 5 minutes
     });

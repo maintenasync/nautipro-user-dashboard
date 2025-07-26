@@ -30,6 +30,14 @@ export default function RegisterPage() {
         'Port Manager',
         'Fleet Manager',
         'Operations Manager',
+        'Ship Owner',
+        'Ship Manager',
+        'Crew Manager',
+        'Safety Officer',
+        'Quality Assurance Officer',
+        'Maintenance Technician',
+        'Logistics Coordinator',
+        'Other',
     ];
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {

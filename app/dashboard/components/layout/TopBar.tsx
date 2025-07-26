@@ -219,13 +219,13 @@ export default function TopBar({
                         </div>
 
                         {/* NOTIFICATIONS - Hidden on small screens */}
-                        <button className="hidden sm:block p-2 rounded-md text-gray-600 [data-theme='dark']_&:text-gray-400 hover:bg-gray-100 [data-theme='dark']_&:hover:bg-gray-700 transition-colors relative">
-                            <BellIcon />
-                            {/* Notification Badge */}
-                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                                3
-                            </span>
-                        </button>
+                        {/*<button className="hidden sm:block p-2 rounded-md text-gray-600 [data-theme='dark']_&:text-gray-400 hover:bg-gray-100 [data-theme='dark']_&:hover:bg-gray-700 transition-colors relative">*/}
+                        {/*    <BellIcon />*/}
+                        {/*    /!* Notification Badge *!/*/}
+                        {/*    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">*/}
+                        {/*        3*/}
+                        {/*    </span>*/}
+                        {/*</button>*/}
 
                         {/* ✨ ENHANCED USER MENU */}
                         <div className="relative">
