@@ -197,6 +197,14 @@ export interface VesselUI {
     status: string;
     imo: string;
     image?: string;
+    mmsi: string;
+    flag: string;
+    callsign: string;
+    gross_tonnage: number;
+    summer_dead_weight: number;
+    year_of_build: number;
+    place_of_build: string;
+    class_name: string;
 }
 
 export interface CrewMemberUI {

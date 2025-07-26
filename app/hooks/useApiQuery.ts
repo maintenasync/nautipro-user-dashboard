@@ -124,6 +124,14 @@ const transformVesselForUI = (vessel: Vessel, companyName?: string): VesselUI =>
     status: vessel.is_deleted ? 'Inactive' : 'Active',
     imo: vessel.imo,
     image: vessel.image,
+    mmsi: vessel.mmsi || 'N/A',
+    flag: vessel.flag || 'N/A',
+    callsign: vessel.callsign || 'N/A',
+    gross_tonnage: vessel.gross_tonnage || 0,
+    summer_dead_weight: vessel.summer_deadweight || 0,
+    year_of_build: vessel.year_of_build || 0,
+    place_of_build: vessel.place_of_build || 'N/A',
+    class_name: 'N/A',
 });
 
 const transformCrewForUI = (crew: CrewMember, vesselName?: string): CrewMemberUI => ({

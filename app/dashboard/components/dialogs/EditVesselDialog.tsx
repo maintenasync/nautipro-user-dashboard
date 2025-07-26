@@ -70,7 +70,7 @@ export default function EditVesselDialog({ isOpen, vessel, onClose, onSuccess }:
     const classSocieties = [
         'Lloyd\'s Register', 'DNV', 'American Bureau of Shipping (ABS)', 'Bureau Veritas',
         'ClassNK', 'Korean Register', 'China Classification Society', 'Russian Maritime Register',
-        'Indian Register of Shipping', 'Turkish Lloyd'
+        'Indian Register of Shipping', 'Turkish Lloyd', 'Others'
     ];
 
     // Initialize form data when vessel changes
@@ -86,15 +86,15 @@ export default function EditVesselDialog({ isOpen, vessel, onClose, onSuccess }:
                 name: vessel.name || '',
                 previous_name: '', // Need to fetch from detailed API
                 imo: vessel.imo || '',
-                mmsi: '', // Need to fetch from detailed API
-                flag: '', // Need to fetch from detailed API
-                callsign: '', // Need to fetch from detailed API
-                gross_tonnage: '', // Need to fetch from detailed API
-                summer_deadweight: '', // Need to fetch from detailed API
-                year_of_build: '', // Need to fetch from detailed API
-                place_of_build: '', // Need to fetch from detailed API
+                mmsi: vessel.mmsi || '',
+                flag: vessel.flag || '',
+                callsign: vessel.callsign || '',
+                gross_tonnage: vessel.gross_tonnage?.toString() || '',
+                summer_deadweight: vessel.summer_dead_weight?.toString() || '',
+                year_of_build: vessel.year_of_build?.toString() || '',
+                place_of_build: vessel.place_of_build || '',
                 vesseltype_id: vesselType?.id.toString() || '',
-                class_name: '', // Need to fetch from detailed API
+                class_name: vessel.class_name || '',
                 company_id: company?.id || '',
             });
 
