@@ -247,7 +247,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     license: response.data.license,
                 };
 
-                // ← TAMBAH BAGIAN INI untuk clear cache dari user sebelumnya
+                // Clear Cache React Query sebelum login
                 queryClient.clear();
 
                 dispatch({
@@ -257,6 +257,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         token: response.data.token,
                     },
                 });
+
+                // Refresh user data after login
+                await refreshUserData();
+
                 return true;
             } else {
                 dispatch({ type: 'LOGIN_FAILURE' });

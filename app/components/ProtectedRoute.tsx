@@ -60,7 +60,7 @@ const AccessDenied = ({ userRole, requiredRole }: { userRole?: string; requiredR
                 </h2>
 
                 <p className="text-gray-600 [data-theme='dark']_&:text-gray-400 mb-6">
-                    You don't have permission to access this page.
+                    You don&#39;t have permission to access this page.
                 </p>
 
                 <div className="bg-gray-50 rounded-lg p-4 mb-6 [data-theme='dark']_&:bg-gray-700">
