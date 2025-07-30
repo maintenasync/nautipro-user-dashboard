@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Camera, User, Mail, Calendar, Lock, Check, AlertCircle,
-    RefreshCw, Edit3, Shield
+    RefreshCw, Edit3, Shield, Monitor
 } from 'lucide-react';
 
 import AvatarCropDialog from '../dialogs/AvatarCropDialog';
@@ -23,10 +23,18 @@ interface UserData {
     updated_at: string;
 }
 
+interface SessionData {
+    app_name: string;
+    device: string;
+}
+
 const UserProfile: React.FC = () => {
     const [userData, setUserData] = useState<UserData | null>(null);
+    const [sessionData, setSessionData] = useState<SessionData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isLoadingSession, setIsLoadingSession] = useState(true);
     const [error, setError] = useState('');
+    const [sessionError, setSessionError] = useState('');
     const [dialogs, setDialogs] = useState({
         avatar: false,
         password: false,
@@ -35,6 +43,7 @@ const UserProfile: React.FC = () => {
 
     useEffect(() => {
         loadUserData();
+        loadCurrentSession();
     }, []);
 
     const loadUserData = async () => {
@@ -65,6 +74,37 @@ const UserProfile: React.FC = () => {
             console.error('Failed to load user data:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const loadCurrentSession = async () => {
+        setIsLoadingSession(true);
+        setSessionError('');
+        try {
+            const token = localStorage.getItem('auth_token');
+            const apiKey = '12345678';
+
+            console.log('Loading current session with token:', token, 'and API key:', apiKey);
+
+            const response = await fetch(`https://auth.nautiproconnect.com/api/v1/web/current-session`, {
+                method: 'GET',
+                headers: {
+                    'x-api-key': apiKey || '',
+                    'authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch session data');
+            }
+
+            const result = await response.json();
+            setSessionData(result.data);
+        } catch (error: any) {
+            setSessionError('Failed to load session information');
+            console.error('Failed to load session data:', error);
+        } finally {
+            setIsLoadingSession(false);
         }
     };
 
@@ -162,7 +202,7 @@ const UserProfile: React.FC = () => {
                             Failed to load profile
                         </h3>
                         <p className="text-gray-600 [data-theme='dark']_&:text-gray-400 mb-6">
-                            We couldn't load your profile information. Please try again.
+                            We couldn&#39;t load your profile information. Please try again.
                         </p>
                         <button
                             onClick={loadUserData}
@@ -314,6 +354,54 @@ const UserProfile: React.FC = () => {
                         </h3>
 
                         <div className="space-y-4">
+                            {/* Current Session */}
+                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg [data-theme='dark']_&:bg-gray-700">
+                                <div className="flex items-center space-x-3">
+                                    <Monitor className="w-5 h-5 text-gray-400" />
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-800 [data-theme='dark']_&:text-white">
+                                            Current Session
+                                        </p>
+                                        {isLoadingSession ? (
+                                            <div className="flex items-center space-x-2">
+                                                <div className="w-4 h-4 bg-gray-200 rounded animate-pulse [data-theme='dark']_&:bg-gray-600"></div>
+                                                <div className="w-20 h-3 bg-gray-200 rounded animate-pulse [data-theme='dark']_&:bg-gray-600"></div>
+                                            </div>
+                                        ) : sessionError ? (
+                                            <p className="text-sm text-yellow-500">
+                                                No Session Active
+                                            </p>
+                                        ) : sessionData ? (
+                                            <div className="text-sm text-gray-600 [data-theme='dark']_&:text-gray-400">
+                                                <p>{sessionData.device}</p>
+                                                <p className="text-xs text-gray-500 [data-theme='dark']_&:text-gray-500">
+                                                    {sessionData.app_name}
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm text-gray-600 [data-theme='dark']_&:text-gray-400">
+                                                No active session
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <button
+                                        onClick={loadCurrentSession}
+                                        className="p-1.5 text-gray-400 hover:text-gray-600 [data-theme='dark']_&:hover:text-gray-300 transition-colors"
+                                        title="Refresh session"
+                                    >
+                                        <RefreshCw className="w-4 h-4" />
+                                    </button>
+                                    {sessionData && (
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 [data-theme='dark']_&:bg-green-900/30 [data-theme='dark']_&:text-green-300">
+                                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></div>
+                                            Active
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
                             {/* Password */}
                             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg [data-theme='dark']_&:bg-gray-700">
                                 <div className="flex items-center space-x-3">
