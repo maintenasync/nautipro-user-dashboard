@@ -16,10 +16,10 @@ export const LogoFull = ({ className }: { className?: string }) => (
 export const LogoIcon = ({ className }: { className?: string }) => (
     // Asumsikan gambar logo ikon Anda ada di public/logo-icon.png
     <Image
-        src="/logo/logo.png" // Path relatif ke folder public
+        src="/logo/logo-light.png" // Path relatif ke folder public
         alt="Dashboard Icon Logo"
-        width={20} // Sesuaikan dengan lebar asli gambar Anda atau lebar yang diinginkan
-        height={20} // Sesuaikan dengan tinggi asli gambar Anda atau tinggi yang diinginkan
+        width={50} // Sesuaikan dengan lebar asli gambar Anda atau lebar yang diinginkan
+        height={50} // Sesuaikan dengan tinggi asli gambar Anda atau tinggi yang diinginkan
         className={className} // Menerapkan kelas Tailwind dari props
     />
 );

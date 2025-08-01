@@ -48,10 +48,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
         setResolvedTheme(newResolvedTheme);
 
-        // Apply theme to document
+        // Apply theme to document and save preference
         if (typeof window !== 'undefined') {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
+            try {
+                // Use resolved theme for document attribute instead of raw theme
+                document.documentElement.setAttribute('data-theme', newResolvedTheme);
+                localStorage.setItem('theme', theme);
+            } catch (error) {
+                console.error('Error accessing localStorage or setting document attribute:', error);
+            }
         }
     }, [theme]);
 

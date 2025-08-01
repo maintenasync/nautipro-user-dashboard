@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { BellIcon, UserIcon } from '../icons/Icons'; // ← IMPORT UserIcon dari Icons.tsx
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useSafeTheme } from '@/app/hooks/useSafeTheme';
+import LogoutConfirmDialog from '../dialogs/LogoutConfirmDialog';
 
 // MenuIcon untuk mobile menu button
 const MenuIcon = ({ className }: { className?: string }) => (
@@ -36,6 +37,8 @@ export default function TopBar({
     const { theme, setTheme, mounted } = useSafeTheme();
     const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+    const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     // ✨ Refs untuk keyboard navigation
     const userButtonRef = useRef<HTMLButtonElement>(null);
@@ -67,14 +70,26 @@ export default function TopBar({
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [isUserMenuOpen]);
 
-    // ✨ Enhanced logout dengan confirmation
+    // ✨ Enhanced logout dengan custom confirmation dialog
     const handleLogout = () => {
         setIsUserMenuOpen(false);
+        setIsLogoutDialogOpen(true);
+    };
 
-        // Optional: Add confirmation dialog
-        if (confirm('Are you sure you want to sign out?')) {
+    // Handle logout confirmation
+    const handleLogoutConfirm = async () => {
+        setIsLoggingOut(true);
+        try {
             logout();
+        } finally {
+            setIsLoggingOut(false);
+            setIsLogoutDialogOpen(false);
         }
+    };
+
+    // Handle logout cancel
+    const handleLogoutCancel = () => {
+        setIsLogoutDialogOpen(false);
     };
 
     // ✨ Menu items dengan icons
@@ -203,14 +218,21 @@ export default function TopBar({
                                                     setTheme(themeOption.value);
                                                     setIsThemeMenuOpen(false);
                                                 }}
-                                                className={`w-full flex items-center px-3 py-2 text-sm text-left hover:bg-gray-100 [data-theme='dark']_&:hover:bg-gray-700 transition-colors ${
+                                                className={`w-full flex items-center px-4 py-2 text-sm text-left transition-colors duration-150 ${
                                                     theme === themeOption.value
-                                                        ? 'bg-blue-50 [data-theme=\'dark\']_&:bg-blue-900/20 text-blue-600 [data-theme=\'dark\']_&:text-blue-400'
-                                                        : 'text-gray-700 [data-theme=\'dark\']_&:text-gray-300'
+                                                        ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-500 [data-theme=\'dark\']_&:bg-blue-900/20 [data-theme=\'dark\']_&:text-blue-400 [data-theme=\'dark\']_&:border-blue-400'
+                                                        : 'text-gray-700 hover:bg-gray-100 [data-theme=\'dark\']_&:text-gray-300 [data-theme=\'dark\']_&:hover:bg-gray-700'
                                                 }`}
                                             >
-                                                <span className="mr-2">{themeOption.icon}</span>
-                                                {themeOption.label}
+                                                <span className="mr-3 flex-shrink-0">{themeOption.icon}</span>
+                                                <span className="font-medium">{themeOption.label}</span>
+                                                {theme === themeOption.value && (
+                                                    <span className="ml-auto">
+                                                        <svg className="w-4 h-4 text-blue-500 [data-theme='dark']_&:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                        </svg>
+                                                    </span>
+                                                )}
                                             </button>
                                         ))}
                                     </div>
@@ -330,6 +352,7 @@ export default function TopBar({
                                             </div>
                                         </div>
 
+
                                         {/* Enhanced Menu Items with Icons */}
                                         <div className="py-1">
                                             {userMenuItems.map((item, index) => (
@@ -368,6 +391,15 @@ export default function TopBar({
                     </div>
                 </div>
             </div>
+
+            {/* ✨ LOGOUT CONFIRMATION DIALOG */}
+            <LogoutConfirmDialog
+                isOpen={isLogoutDialogOpen}
+                onConfirm={handleLogoutConfirm}
+                onCancel={handleLogoutCancel}
+                isLoading={isLoggingOut}
+                userName={state.user?.name}
+            />
         </header>
     );
 }
