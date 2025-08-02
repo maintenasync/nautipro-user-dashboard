@@ -116,7 +116,7 @@ export default function LoginPage() {
                                         onFocus={() => setFocusedField('email_or_username')}
                                         onBlur={() => setFocusedField(null)}
                                         className="peer w-full px-4 py-3 bg-white/50 [data-theme='dark']:bg-gray-700/50 border border-gray-200 [data-theme='dark']:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 placeholder-transparent text-gray-900 [data-theme='dark']:text-white"
-                                        placeholder="Email or Username"
+                                        // placeholder="Email or Username"
                                     />
                                     <label
                                         htmlFor="email_or_username"
@@ -149,7 +149,7 @@ export default function LoginPage() {
                                         onFocus={() => setFocusedField('password')}
                                         onBlur={() => setFocusedField(null)}
                                         className="peer w-full px-4 py-3 bg-white/50 [data-theme='dark']:bg-gray-700/50 border border-gray-200 [data-theme='dark']:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 placeholder-transparent text-gray-900 [data-theme='dark']:text-white pr-12"
-                                        placeholder="Password"
+                                        // placeholder="Password"
                                     />
                                     <label
                                         htmlFor="password"

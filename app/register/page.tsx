@@ -167,7 +167,7 @@ export default function RegisterPage() {
                                         onFocus={() => setFocusedField('username')}
                                         onBlur={() => setFocusedField(null)}
                                         className="peer w-full px-4 py-3 bg-white/50 [data-theme='dark']:bg-gray-700/50 border border-gray-200 [data-theme='dark']:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 placeholder-transparent text-gray-900 [data-theme='dark']:text-white pr-12"
-                                        placeholder="Username"
+                                        // placeholder="Username"
                                     />
                                     <label
                                         htmlFor="username"
@@ -197,7 +197,7 @@ export default function RegisterPage() {
                                         onFocus={() => setFocusedField('name')}
                                         onBlur={() => setFocusedField(null)}
                                         className="peer w-full px-4 py-3 bg-white/50 [data-theme='dark']:bg-gray-700/50 border border-gray-200 [data-theme='dark']:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 placeholder-transparent text-gray-900 [data-theme='dark']:text-white pr-12"
-                                        placeholder="Full Name"
+                                        // placeholder="Full Name"
                                     />
                                     <label
                                         htmlFor="name"
@@ -229,7 +229,7 @@ export default function RegisterPage() {
                                     onFocus={() => setFocusedField('email')}
                                     onBlur={() => setFocusedField(null)}
                                     className="peer w-full px-4 py-3 bg-white/50 [data-theme='dark']:bg-gray-700/50 border border-gray-200 [data-theme='dark']:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 placeholder-transparent text-gray-900 [data-theme='dark']:text-white pr-12"
-                                    placeholder="Email Address"
+                                    // placeholder="Email Address"
                                 />
                                 <label
                                     htmlFor="email"
@@ -292,7 +292,7 @@ export default function RegisterPage() {
                                         onFocus={() => setFocusedField('password')}
                                         onBlur={() => setFocusedField(null)}
                                         className="peer w-full px-4 py-3 bg-white/50 [data-theme='dark']:bg-gray-700/50 border border-gray-200 [data-theme='dark']:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 placeholder-transparent text-gray-900 [data-theme='dark']:text-white pr-12"
-                                        placeholder="Password"
+                                        // placeholder="Password"
                                     />
                                     <label
                                         htmlFor="password"
@@ -333,7 +333,7 @@ export default function RegisterPage() {
                                         onFocus={() => setFocusedField('confirmPassword')}
                                         onBlur={() => setFocusedField(null)}
                                         className="peer w-full px-4 py-3 bg-white/50 [data-theme='dark']:bg-gray-700/50 border border-gray-200 [data-theme='dark']:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 placeholder-transparent text-gray-900 [data-theme='dark']:text-white pr-12"
-                                        placeholder="Confirm Password"
+                                        // placeholder="Confirm Password"
                                     />
                                     <label
                                         htmlFor="confirmPassword"
