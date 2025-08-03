@@ -24,6 +24,8 @@ class ApiService {
                 baseUrl = BASE_URL_API;
             }
 
+            console.log("Base Url : ", baseUrl);
+
             const response = await fetch(`${baseUrl}${endpoint}`, {
                 ...options,
                 headers: {
@@ -158,7 +160,12 @@ class ApiService {
             // Remove Content-Type for FormData - let browser set it with boundary
             const { 'Content-Type': _, ...headers } = authHeaders;
 
-            const response = await fetch(`${BASE_URL}${endpoint}`, {
+            let baseUrl = BASE_URL;
+            if (endpoint == "/vessel-types" || endpoint.includes("/update-image-vessel/")) {
+                baseUrl = BASE_URL_API;
+            }
+
+            const response = await fetch(`${baseUrl}${endpoint}`, {
                 method: 'POST',
                 headers,
                 body: formData,
