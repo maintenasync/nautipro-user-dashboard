@@ -7,8 +7,8 @@ export const LogoFull = ({ className }: { className?: string }) => (
     <Image
         src="/logo/logo-full.png" // Path relatif ke folder public
         alt="Dashboard Full Logo"
-        width={100} // Sesuaikan dengan lebar asli gambar Anda atau lebar yang diinginkan
-        height={20} // Sesuaikan dengan tinggi asli gambar Anda atau tinggi yang diinginkan
+        width={300} // Sesuaikan dengan lebar asli gambar Anda atau lebar yang diinginkan
+        height={60} // Sesuaikan dengan tinggi asli gambar Anda atau tinggi yang diinginkan
         className={className} // Menerapkan kelas Tailwind dari props
     />
 );
