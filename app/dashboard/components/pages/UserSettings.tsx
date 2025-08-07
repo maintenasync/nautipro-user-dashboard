@@ -7,7 +7,7 @@ import {
 import AvatarCropDialog from '../dialogs/AvatarCropDialog';
 import ChangePasswordDialog from '../dialogs/ChangePasswordDialog';
 import EmailVerificationDialog from '../dialogs/EmailVerificationDialog';
-
+import ChangeNameDialog from '../dialogs/ChangeNameDialog';
 
 interface UserData {
     id: string;
@@ -38,7 +38,8 @@ const UserProfile: React.FC = () => {
     const [dialogs, setDialogs] = useState({
         avatar: false,
         password: false,
-        emailVerification: false
+        emailVerification: false,
+        changeName: false
     });
 
     useEffect(() => {
@@ -133,6 +134,14 @@ const UserProfile: React.FC = () => {
         if (userData) {
             setUserData(prev => prev ? { ...prev, email_verification: true } : null);
             // Show success message
+        }
+    };
+
+    const handleNameChange = (newName: string) => {
+        if (userData) {
+            setUserData(prev => prev ? { ...prev, name: newName } : null);
+            // Refresh user data after successful name change
+            setTimeout(() => loadUserData(), 1000);
         }
     };
 
@@ -250,9 +259,18 @@ const UserProfile: React.FC = () => {
                             </div>
 
                             <div className="flex-1 text-center sm:text-left">
-                                <h2 className="text-xl font-semibold text-gray-800 [data-theme='dark']_&:text-white">
-                                    {userData.name}
-                                </h2>
+                                <div className="flex items-center justify-center sm:justify-start space-x-2 mb-1">
+                                    <h2 className="text-xl font-semibold text-gray-800 [data-theme='dark']_&:text-white">
+                                        {userData.name}
+                                    </h2>
+                                    <button
+                                        onClick={() => openDialog('changeName')}
+                                        className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
+                                        title="Change name"
+                                    >
+                                        <Edit3 className="w-4 h-4" />
+                                    </button>
+                                </div>
                                 <p className="text-gray-600 [data-theme='dark']_&:text-gray-400">
                                     @{userData.username}
                                 </p>
@@ -280,6 +298,28 @@ const UserProfile: React.FC = () => {
                         </h3>
 
                         <div className="space-y-4">
+                            {/* Full Name */}
+                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg [data-theme='dark']_&:bg-gray-700">
+                                <div className="flex items-center space-x-3">
+                                    <User className="w-5 h-5 text-gray-400" />
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-800 [data-theme='dark']_&:text-white">
+                                            Full Name
+                                        </p>
+                                        <p className="text-sm text-gray-600 [data-theme='dark']_&:text-gray-400">
+                                            {userData.name}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => openDialog('changeName')}
+                                    className="px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 [data-theme='dark']_&:bg-blue-900/30 [data-theme='dark']_&:text-blue-300 [data-theme='dark']_&:hover:bg-blue-800/30 transition-colors flex items-center space-x-1"
+                                >
+                                    <Edit3 className="w-3 h-3" />
+                                    <span>Change</span>
+                                </button>
+                            </div>
+
                             {/* Email */}
                             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg [data-theme='dark']_&:bg-gray-700">
                                 <div className="flex items-center space-x-3">
@@ -469,6 +509,13 @@ const UserProfile: React.FC = () => {
                 onClose={() => closeDialog('emailVerification')}
                 email={userData.email}
                 onSuccess={handleEmailVerification}
+            />
+
+            <ChangeNameDialog
+                isOpen={dialogs.changeName}
+                onClose={() => closeDialog('changeName')}
+                currentName={userData.name}
+                onSuccess={handleNameChange}
             />
         </div>
     );
