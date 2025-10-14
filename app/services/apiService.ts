@@ -237,6 +237,9 @@ class ApiService {
         email: string;
         website: string;
     }): Promise<ApiResponse<Company>> {
+
+        console.log(JSON.stringify(data))
+
         return this.request<Company>('/create-company', {
             method: 'POST',
             headers: {

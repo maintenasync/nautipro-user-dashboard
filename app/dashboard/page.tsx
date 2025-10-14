@@ -22,6 +22,9 @@ import UserSettings from './components/pages/UserSettings';
 import CreateCompany from './components/pages/CreateCompany';
 import CreateVessel from './components/pages/CreateVessel';
 import VesselDetail from './components/pages/VesselDetail';
+import Documents from './components/pages/Documents';
+import Procurements from "@/app/dashboard/components/pages/Procurements";
+import Tasks from "@/app/dashboard/components/pages/Tasks";
 
 // Import icons
 import {
@@ -32,7 +35,10 @@ import {
     LicenseIcon,
     InvitationIcon,
     NotificationIcon,
-    SettingsIcon
+    SettingsIcon,
+    DocumentsIcon,
+    ProcurementsIcon,
+    TasksIcon
 } from './components/icons/Icons';
 import {useUserDataManager} from "@/app/hooks/useDataManager";
 
@@ -44,6 +50,9 @@ const menuItems = [
     { id: 'vessels', label: 'Vessels', icon: ShipIcon, component: Vessels },
     { id: 'license', label: 'License', icon: LicenseIcon, component: License },
     { id: 'invitations', label: 'Invitations', icon: InvitationIcon, component: Invitations },
+    { id: 'documents', label: 'Documents', icon: DocumentsIcon, component: Documents },
+    { id: 'procurements', label: 'Procurements', icon: ProcurementsIcon, component: Procurements },
+    { id: 'tasks', label: 'Tasks', icon: TasksIcon, component: Tasks },
     { id: 'notification', label: 'Notification Setting', icon: NotificationIcon, component: NotificationSetting },
     { id: 'settings', label: 'Settings', icon: SettingsIcon, component: UserSettings },
 ];

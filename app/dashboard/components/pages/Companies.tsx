@@ -25,7 +25,8 @@ export default function Companies() {
     const deleteCompanyMutation = useDeleteCompany();
 
     // Check if current user is superintendent
-    const isSuperintendent = authState.user?.role?.toLowerCase() === 'superintendent';
+    // const isSuperintendent = authState.user?.role?.toLowerCase() === 'superintendent';
+    const isSuperintendent = true;
 
     // Filter companies based on search term
     const filteredCompanies = companiesData?.filter(company =>
