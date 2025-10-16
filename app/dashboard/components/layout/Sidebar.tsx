@@ -1,5 +1,6 @@
-// app/dashboard/components/layout/Sidebar.tsx - QUICK MOBILE FIX
+// app/dashboard/components/layout/Sidebar.tsx
 
+import { useState } from 'react';
 import { LogoFull, LogoIcon } from '../icons/Logos';
 
 interface MenuItem {
@@ -7,6 +8,7 @@ interface MenuItem {
     label: string;
     icon: React.ComponentType<{ className?: string }>;
     component: React.ComponentType<any>;
+    children?: MenuItem[];
 }
 
 interface SidebarProps {
@@ -25,12 +27,97 @@ export default function Sidebar({
                                     setActiveMenuItem
                                 }: SidebarProps) {
 
-    const handleMenuItemClick = (id: string) => {
-        setActiveMenuItem(id);
-        // Auto-close sidebar on mobile when menu item is selected
-        if (window.innerWidth < 1024) {
-            setSidebarOpen(false);
+    const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set(['pms', 'management']));
+
+    const handleMenuItemClick = (id: string, hasChildren?: boolean) => {
+        if (hasChildren) {
+            // Toggle submenu expansion
+            setExpandedMenus(prev => {
+                const newSet = new Set(prev);
+                if (newSet.has(id)) {
+                    newSet.delete(id);
+                } else {
+                    newSet.add(id);
+                }
+                return newSet;
+            });
+        } else {
+            // Navigate to page
+            setActiveMenuItem(id);
+            // Auto-close sidebar on mobile when menu item is selected
+            if (window.innerWidth < 1024) {
+                setSidebarOpen(false);
+            }
         }
+    };
+
+    const isMenuExpanded = (menuId: string) => expandedMenus.has(menuId);
+
+    const renderMenuItem = (item: MenuItem, isChild: boolean = false) => {
+        const Icon = item.icon;
+        const hasChildren = item.children && item.children.length > 0;
+        const isExpanded = isMenuExpanded(item.id);
+        const isActive = activeMenuItem === item.id;
+
+        return (
+            <li key={item.id}>
+                <button
+                    onClick={() => handleMenuItemClick(item.id, hasChildren)}
+                    className={`
+                        w-full flex items-center rounded-lg transition-all duration-200 group
+                        ${sidebarOpen ? 'justify-between px-4 py-3' : 'justify-center px-2 py-3'}
+                        ${isChild ? 'pl-12' : ''}
+                        ${isActive && !hasChildren
+                        ? 'bg-blue-500 text-white shadow-md'
+                        : 'text-gray-700 [data-theme=\'dark\']_&:text-gray-300 hover:bg-gray-100 [data-theme=\'dark\']_&:hover:bg-gray-700'
+                    }
+                    `}
+                    title={!sidebarOpen ? item.label : undefined}
+                >
+                    <div className="flex items-center space-x-3">
+                        <Icon
+                            className={`
+                                h-6 w-6 transition-colors flex-shrink-0
+                                ${isActive && !hasChildren
+                                ? 'text-white'
+                                : 'text-gray-500 [data-theme=\'dark\']_&:text-gray-400 group-hover:text-gray-700 [data-theme=\'dark\']_&:group-hover:text-gray-200'
+                            }
+                            `}
+                        />
+                        <span
+                            className={`
+                                font-medium transition-all duration-300
+                                ${sidebarOpen
+                                ? 'opacity-100 translate-x-0'
+                                : 'opacity-0 -translate-x-2 w-0 overflow-hidden lg:opacity-0'
+                            }
+                            `}
+                        >
+                            {item.label}
+                        </span>
+                    </div>
+
+                    {/* Expand/Collapse Icon for parent menus */}
+                    {hasChildren && sidebarOpen && (
+                        <svg
+                            className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                    )}
+                </button>
+
+                {/* Render children if exists and expanded */}
+                {hasChildren && isExpanded && sidebarOpen && (
+                    <ul className="mt-1 space-y-1">
+                        {item.children!.map(child => renderMenuItem(child, true))}
+                    </ul>
+                )}
+            </li>
+        );
     };
 
     return (
@@ -67,48 +154,7 @@ export default function Sidebar({
             {/* NAVIGATION MENU */}
             <nav className="flex-1 p-4 overflow-y-auto">
                 <ul className="space-y-2">
-                    {menuItems.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = activeMenuItem === item.id;
-
-                        return (
-                            <li key={item.id}>
-                                <button
-                                    onClick={() => handleMenuItemClick(item.id)}
-                                    className={`
-                                        w-full flex items-center rounded-lg transition-all duration-200 group
-                                        ${sidebarOpen ? 'justify-start space-x-3 px-4 py-3' : 'justify-center px-2 py-3'}
-                                        ${isActive
-                                        ? 'bg-blue-500 text-white shadow-md'
-                                        : 'text-gray-700 [data-theme=\'dark\']_&:text-gray-300 hover:bg-gray-100 [data-theme=\'dark\']_&:hover:bg-gray-700'
-                                    }
-                                    `}
-                                    title={!sidebarOpen ? item.label : undefined}
-                                >
-                                    <Icon
-                                        className={`
-                                            h-6 w-6 transition-colors flex-shrink-0
-                                            ${isActive
-                                            ? 'text-white'
-                                            : 'text-gray-500 [data-theme=\'dark\']_&:text-gray-400 group-hover:text-gray-700 [data-theme=\'dark\']_&:group-hover:text-gray-200'
-                                        }
-                                        `}
-                                    />
-                                    <span
-                                        className={`
-                                            font-medium transition-all duration-300
-                                            ${sidebarOpen
-                                            ? 'opacity-100 translate-x-0'
-                                            : 'opacity-0 -translate-x-2 w-0 overflow-hidden lg:opacity-0'
-                                        }
-                                        `}
-                                    >
-                                        {item.label}
-                                    </span>
-                                </button>
-                            </li>
-                        );
-                    })}
+                    {menuItems.map((item) => renderMenuItem(item))}
                 </ul>
             </nav>
 

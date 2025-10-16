@@ -1,4 +1,4 @@
-// app/dashboard/page.tsx - QUICK MOBILE FIX
+// app/dashboard/page.tsx - WITH EXPANDABLE MENU STRUCTURE
 
 'use client';
 
@@ -25,6 +25,7 @@ import VesselDetail from './components/pages/VesselDetail';
 import Documents from './components/pages/Documents';
 import Procurements from "@/app/dashboard/components/pages/Procurements";
 import Tasks from "@/app/dashboard/components/pages/Tasks";
+import Components from "@/app/dashboard/components/pages/Components";
 
 // Import icons
 import {
@@ -38,24 +39,82 @@ import {
     SettingsIcon,
     DocumentsIcon,
     ProcurementsIcon,
-    TasksIcon
+    TasksIcon,
+    ComponentsIcon
 } from './components/icons/Icons';
 import {useUserDataManager} from "@/app/hooks/useDataManager";
 
-// Menu items configuration
+// PMS Icon (folder icon)
+const PMSIcon = ({ className }: { className?: string }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+    </svg>
+);
+
+// Management Icon (briefcase icon)
+const ManagementIcon = ({ className }: { className?: string }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
+);
+
+// Menu items configuration with hierarchical structure
 const menuItems = [
-    { id: 'home', label: 'Dashboard', icon: HomeIcon, component: DashboardHome },
-    { id: 'crew', label: 'Crew Management', icon: CrewIcon, component: CrewManagement },
-    { id: 'companies', label: 'Companies', icon: BuildingIcon, component: Companies },
-    { id: 'vessels', label: 'Vessels', icon: ShipIcon, component: Vessels },
-    { id: 'license', label: 'License', icon: LicenseIcon, component: License },
-    { id: 'invitations', label: 'Invitations', icon: InvitationIcon, component: Invitations },
-    { id: 'documents', label: 'Documents', icon: DocumentsIcon, component: Documents },
-    { id: 'procurements', label: 'Procurements', icon: ProcurementsIcon, component: Procurements },
-    { id: 'tasks', label: 'Tasks', icon: TasksIcon, component: Tasks },
-    { id: 'notification', label: 'Notification Setting', icon: NotificationIcon, component: NotificationSetting },
-    { id: 'settings', label: 'Settings', icon: SettingsIcon, component: UserSettings },
+    {
+        id: 'home',
+        label: 'Dashboard',
+        icon: HomeIcon,
+        component: DashboardHome
+    },
+    {
+        id: 'pms',
+        label: 'PMS',
+        icon: PMSIcon,
+        component: DashboardHome, // Dummy component (won't be used)
+        children: [
+            { id: 'components', label: 'Components', icon: ComponentsIcon, component: Components },
+            { id: 'documents', label: 'Documents', icon: DocumentsIcon, component: Documents },
+            { id: 'procurements', label: 'Procurements', icon: ProcurementsIcon, component: Procurements },
+            { id: 'tasks', label: 'Tasks', icon: TasksIcon, component: Tasks },
+        ]
+    },
+    {
+        id: 'management',
+        label: 'Management',
+        icon: ManagementIcon,
+        component: DashboardHome, // Dummy component (won't be used)
+        children: [
+            { id: 'companies', label: 'Companies', icon: BuildingIcon, component: Companies },
+            { id: 'vessels', label: 'Vessels', icon: ShipIcon, component: Vessels },
+            { id: 'crew', label: 'Crew', icon: CrewIcon, component: CrewManagement },
+            { id: 'license', label: 'License', icon: LicenseIcon, component: License },
+        ]
+    },
+    {
+        id: 'notification',
+        label: 'Notification Setting',
+        icon: NotificationIcon,
+        component: NotificationSetting
+    },
+    {
+        id: 'settings',
+        label: 'Settings',
+        icon: SettingsIcon,
+        component: UserSettings
+    },
 ];
+
+// Helper function to find menu item by id (including nested children)
+const findMenuItemById = (items: any[], id: string): any => {
+    for (const item of items) {
+        if (item.id === id) return item;
+        if (item.children) {
+            const found = findMenuItemById(item.children, id);
+            if (found) return found;
+        }
+    }
+    return null;
+};
 
 // Dashboard Content Component (protected content)
 function DashboardContent() {
@@ -162,7 +221,7 @@ function DashboardContent() {
         }
 
         // Main view - render the selected menu component
-        const menuItem = menuItems.find(item => item.id === activeMenuItem);
+        const menuItem = findMenuItemById(menuItems, activeMenuItem);
         if (!menuItem) return <DashboardHome />;
 
         const Component = menuItem.component;
@@ -235,7 +294,7 @@ function DashboardContent() {
             {/* MOBILE OVERLAY BACKDROP */}
             {sidebarOpen && (
                 <div
-                    className="fixed inset-0 z-40 bg-opacity-50 backdrop-blur-sm lg:hidden"
+                    className="fixed inset-0 z-40 bg-black bg-opacity-50 backdrop-blur-sm lg:hidden"
                     onClick={() => setSidebarOpen(false)}
                     aria-hidden="true"
                 />
