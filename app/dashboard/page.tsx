@@ -88,6 +88,7 @@ const menuItems = [
             { id: 'vessels', label: 'Vessels', icon: ShipIcon, component: Vessels },
             { id: 'crew', label: 'Crew', icon: CrewIcon, component: CrewManagement },
             { id: 'license', label: 'License', icon: LicenseIcon, component: License },
+            { id: 'invitations', label: 'Invitations', icon: InvitationIcon, component: Invitations },
         ]
     },
     {
