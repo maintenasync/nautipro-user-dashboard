@@ -93,7 +93,7 @@ const menuItems = [
     },
     {
         id: 'notification',
-        label: 'Notification Setting',
+        label: 'Notification',
         icon: NotificationIcon,
         component: NotificationSetting
     },
