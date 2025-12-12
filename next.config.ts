@@ -6,6 +6,11 @@ const nextConfig: NextConfig = {
         // your project has ESLint errors.
         ignoreDuringBuilds: true,
     },
+    output: "standalone",
+    images: {
+        minimumCacheTTL: 60,
+    },
+    poweredByHeader: false,
 };
 
 export default nextConfig;
